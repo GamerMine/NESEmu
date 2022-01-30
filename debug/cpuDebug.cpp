@@ -150,10 +150,25 @@ bool cpuDebug::OnUserUpdate(float fElapsedTime) {
         }
     }
 
+    if (GetKey(olc::Key::P).bPressed) {
+        ++selectedPalette &= 0x07;
+    }
+
     switch (currentPage) {
         case 0:
             drawCpu(516, 2);
             drawCode(516, 72, 26);
+
+            for (int p = 0; p < 8; p++) {
+                for (int s = 0; s < 4; s++) {
+                    FillRect(516 + p * (swatchSize * 5) + s * swatchSize, 340, swatchSize, swatchSize, nes.ppu.getColor(p, s));
+                }
+            }
+            DrawRect(516 + selectedPalette * (swatchSize * 5) - 1, 339, (swatchSize * 4), swatchSize, olc::WHITE);
+
+            DrawSprite(516, 348, &nes.ppu.getPatternTable(0, selectedPalette));
+            DrawSprite(648, 348, &nes.ppu.getPatternTable(1, selectedPalette));
+
             DrawSprite(0, 0, &nes.ppu.getScreen(), 2);
             break;
         case 1:

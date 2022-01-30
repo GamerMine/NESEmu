@@ -6,6 +6,7 @@
 
 ppuRP2C02::ppuRP2C02() {
     // Here are all available colors
+    // They are all hard coded
     colors[0x00] = olc::Pixel(84, 84, 84);
     colors[0x01] = olc::Pixel(0, 30, 116);
     colors[0x02] = olc::Pixel(8, 16, 144);
@@ -84,43 +85,120 @@ void ppuRP2C02::connectGamepak(const std::shared_ptr<Gamepak>& gamepak) {
 }
 
 void ppuRP2C02::cpuWrite(uint16_t addr, uint8_t data) {
-    
-}
-
-uint8_t ppuRP2C02::cpuRead(uint16_t addr) {
     switch (addr) {
-        case 0x2000: // Controller
+        case 0x0000: // Control
+            ppuCTRL.rawData = data;
             break;
-        case 0x2001: // Mask
+        case 0x0001: // Mask
+            ppuMask.rawData = data;
             break;
-        case 0x2002: // Status
+        case 0x0002: // Status
             break;
-        case 0x2003: // OAM Address
+        case 0x0003: // OAM Address
             break;
-        case 0x2004: // OAM Data
+        case 0x0004: // OAM Data
             break;
-        case 0x2005: // Scroll
+        case 0x0005: // Scroll
             break;
-        case 0x2006: // Address
+        case 0x0006: // Address
+            if (addressLatch == 0x00) {
+                ppuAddress = (ppuAddress & 0x00FF) | (data << 8);
+                addressLatch = 0x01;
+            } else {
+                addressLatch = 0x00;
+                ppuAddress = (ppuAddress & 0xFF00) | data;
+            }
             break;
-        case 0x2007: // Data
+        case 0x0007: // Data
+            ppuWrite(ppuAddress, data);
+            ppuAddress++;
             break;
         case 0x4014: // OAM DMA
             break;
     }
 }
 
+uint8_t ppuRP2C02::cpuRead(uint16_t addr) {
+    uint8_t data = 0x00;
+    switch (addr) {
+        case 0x0000: // Control
+            break;
+        case 0x0001: // Mask
+            break;
+        case 0x0002: // Status
+            ppuStatus.verticalBlank = 1;
+            data = (ppuStatus.rawData & 0xE0) | (readBuffer & 0x1F);
+            ppuStatus.verticalBlank = 0;
+            addressLatch = 0x00;
+            break;
+        case 0x0003: // OAM Address
+            break;
+        case 0x0004: // OAM Data
+            break;
+        case 0x0005: // Scroll
+            break;
+        case 0x0006: // Address
+            break;
+        case 0x0007: // Data
+            // According to nesdev, when reading from the ppuData register, we wants to have a read buffer. But, reading
+            // palette data is direct, no need of a read buffer.
+            data = readBuffer;
+            readBuffer = ppuRead(ppuAddress);
+
+            if (ppuAddress >= 0x3F00) data = readBuffer;
+            ppuAddress++;
+            break;
+        case 0x4014: // OAM DMA
+            break;
+    }
+
+    return data;
+}
+
 void ppuRP2C02::ppuWrite(uint16_t addr, uint8_t data) {
     // The Cartridge will intercept all the address that the Mapper accept
     if (gamepak->ppuWrite(addr, data)) {
 
+    } else if (addr >= 0x0000 && addr <= 0x1FFF) { // Pattern table locations
+
+    } else if (addr >= 0x2000 && addr <= 0x3EFF) { // Nametable locations
+
+    } else if (addr >= 0x3F00 && addr <= 0x3FFF) { // Color palette locations
+        addr &= 0x001F;
+        // This are hardcoded values that are specifically mirrored. See : https://wiki.nesdev.org/w/index.php?title=PPU_palettes#Memory_Map
+        if (addr == 0x0010) addr = 0x0000;
+        if (addr == 0x0014) addr = 0x0004;
+        if (addr == 0x0018) addr = 0x0008;
+        if (addr == 0x001C) addr = 0x000C;
+        paletteRAM[addr] = data;
     }
 }
 
 uint8_t ppuRP2C02::ppuRead(uint16_t addr) {
+    // The following locations are all listed here : https://wiki.nesdev.org/w/index.php?title=PPU_memory_map
     uint8_t data = 0;
     if (gamepak->ppuRead(addr, data)) {
 
+    } else if (addr >= 0x0000 && addr <= 0x1FFF) { // Pattern table locations
+        /*
+         * This is actually simple :
+         * There is 2 pattern tables, 0 and 1
+         * The first one is located between 0x0000 and 0x0FFF
+         * The second one is located between 0x1000 and 0x1FFF
+         * So, to select the correct pattern table we are just keeping the first hexadecimal number
+         * Then, we keep the 3 next numbers to select the pixel.
+         */
+        //data = patternTables[addr >> 12].GetPixel(addr & 0x0FFF);
+    } else if (addr >= 0x2000 && addr <= 0x3EFF) { // Nametable locations
+
+    } else if (addr >= 0x3F00 && addr <= 0x3FFF) { // Color palette locations
+        addr &= 0x001F;
+        // This are hardcoded values that are specifically mirrored. See : https://wiki.nesdev.org/w/index.php?title=PPU_palettes#Memory_Map
+        if (addr == 0x0010) addr = 0x0000;
+        if (addr == 0x0014) addr = 0x0004;
+        if (addr == 0x0018) addr = 0x0008;
+        if (addr == 0x001C) addr = 0x000C;
+        data = paletteRAM[addr];
     }
 
     return data;
@@ -134,8 +212,33 @@ olc::Sprite &ppuRP2C02::getNametable(uint8_t i) {
     return nametables[i];
 }
 
-olc::Sprite &ppuRP2C02::getPatternTable(uint8_t i) {
+olc::Sprite &ppuRP2C02::getPatternTable(uint8_t i, uint8_t palette) {
+    // The pattern table is divided into 2 256 tiles planes. Each tile is 16 bytes made of two planes.
+    // So, one tile plane is 4096 bytes long (4KB or 0x0FFF)
+    for (int x = 0; x < 16; x++) {
+        for (int y = 0; y < 16; y++) {
+            // The idea here is to make a 1D offset from x and y
+            // One table is 256 bytes long
+            uint16_t offset = x * 256 + y * 16;
+
+            for (int row = 0; row < 8; row++) {
+                uint8_t tileLSB = ppuRead(i * 0x1000 + offset + row); // We are selecting the tile plane and adding the offset
+                uint8_t tileMSB = ppuRead(i * 0x1000 + offset + row + 8);
+                for (int col = 0; col < 8; col++) {
+                    uint8_t pixel = (tileLSB & 0x01) + (tileMSB & 0x01);
+                    tileLSB >>= 1;
+                    tileMSB >>= 1;
+
+                    patternTables[i].SetPixel(y * 8 + (7 - col), x * 8 + row, getColor(palette, pixel));
+                }
+            }
+        }
+    }
     return patternTables[i];
+}
+
+olc::Pixel& ppuRP2C02::getColor(uint8_t palette, uint8_t pixel) {
+    return colors[ppuRead(0x3F00 + (palette << 2) + pixel) & 0x3F];
 }
 
 void ppuRP2C02::clock() {

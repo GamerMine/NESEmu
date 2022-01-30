@@ -11,7 +11,7 @@ Bus::Bus() {
     }
 
     cpu.connectBus(this);
-    ppu.connectBus(this);
+   ppu.connectBus(this);
 }
 
 Bus::~Bus() = default;
@@ -35,9 +35,9 @@ uint8_t Bus::cpuRead(uint16_t addr) {
     if (gamepak->cpuRead(addr, data)) {
 
     } else if (addr >= 0x0000 && addr <= 0x1FFF) {
-        return cpuRAM[addr & 0x07FF];
+        data = cpuRAM[addr & 0x07FF];
     } else if (addr >= 0x2000 && addr <= 0x3FFF) {
-        ppu.cpuRead(addr & 0x0007);
+        data = ppu.cpuRead(addr & 0x0007);
     }
 
     return data;

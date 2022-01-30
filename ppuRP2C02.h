@@ -59,10 +59,54 @@ private:
     int16_t scanline = 0;
     int16_t cycle = 0;
 
+private:
+    union {
+        struct {
+            uint8_t nametableAddr1 = 1;
+            uint8_t nametableAddr2 = 1;
+            uint8_t vramAddrIncrement = 1;
+            uint8_t spritePatternTableAddr = 1;
+            uint8_t backgroundPatternTableAddr = 1;
+            uint8_t spriteSize = 1;
+            uint8_t ppuSelect = 1;
+            uint8_t generateNMI = 1;
+        };
+        uint8_t rawData;
+    } ppuCTRL;
+
+    union {
+        struct {
+            uint8_t greyscale = 1;
+            uint8_t showBackgroundLeft = 1;
+            uint8_t showSpritesLeft = 1;
+            uint8_t showBackground = 1;
+            uint8_t showSprites = 1;
+            uint8_t enphasizeRed = 1;
+            uint8_t enphasizeGreen = 1;
+            uint8_t enphasizeBlue = 1;
+        };
+        uint8_t rawData;
+    } ppuMask;
+
+    union {
+        struct {
+            uint8_t unused = 5;
+            uint8_t spriteOverflow = 1;
+            uint8_t spriteZeroHit = 1;
+            uint8_t verticalBlank = 1;
+        };
+        uint8_t rawData;
+    } ppuStatus;
+
+    uint8_t addressLatch = 0x00; // The CPU can only write 8 bit values. This is the reason of this latch
+    uint8_t readBuffer = 0x00;
+    uint16_t ppuAddress = 0x0000;
+
 public:
     olc::Sprite& getScreen();
     olc::Sprite& getNametable(uint8_t i);
-    olc::Sprite& getPatternTable(uint8_t i);
+    olc::Sprite& getPatternTable(uint8_t i, uint8_t palette);
+    olc::Pixel& getColor(uint8_t palette, uint8_t pixel);
     bool frameComplete = false;
 };
 

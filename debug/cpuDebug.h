@@ -19,7 +19,9 @@ public:
 
     bool run = false;
     float residualTime = 0.0f;
-    uint8_t currentPage = 0;
+    uint8_t currentPage = 0x00;
+    uint8_t selectedPalette = 0x00;
+    const int swatchSize = 6;
 
     static std::string toHex(uint32_t number, uint8_t numDigits);
 

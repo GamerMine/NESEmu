@@ -1,4 +1,4 @@
-/home/maxime/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/213.6461.75/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/home/maxime/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/213.6461.75/bin/ninja/linux/ninja -G Ninja /home/maxime/CLionProjects/NES_Emu
+/home/maxime/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/213.6461.75/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/home/maxime/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/213.6461.75/bin/ninja/linux/ninja -G Ninja /home/maxime/Documents/Programming/C_C++/Projects/NESEmu
 -- Configuring done
 -- Generating done
--- Build files have been written to: /home/maxime/CLionProjects/NES_Emu/cmake-build-debug
+-- Build files have been written to: /home/maxime/Documents/Programming/C_C++/Projects/NESEmu/cmake-build-debug
