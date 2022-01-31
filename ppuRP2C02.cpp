@@ -126,7 +126,6 @@ uint8_t ppuRP2C02::cpuRead(uint16_t addr) {
         case 0x0001: // Mask
             break;
         case 0x0002: // Status
-            ppuStatus.verticalBlank = 1;
             data = (ppuStatus.rawData & 0xE0) | (readBuffer & 0x1F);
             ppuStatus.verticalBlank = 0;
             addressLatch = 0x00;
@@ -243,6 +242,20 @@ olc::Pixel& ppuRP2C02::getColor(uint8_t palette, uint8_t pixel) {
 }
 
 void ppuRP2C02::clock() {
+
+    if (scanline == -1 && cycle == 1) {
+        ppuStatus.verticalBlank = 0;
+    }
+
+    // If the generate NMI is set in ppuCTRL, an NMI will be generated at each start of a frame
+    if (scanline == 241 && cycle == 1) {
+        ppuStatus.verticalBlank = 1;
+        if (ppuCTRL.generateNMI) {
+            nmi = true;
+        }
+    }
+
+    // Old TV noise generation
     screenOut.SetPixel(cycle - 1, scanline, colors[(random() % 2) ? 0x3F : 0x30]);
 
     cycle++;
@@ -255,4 +268,13 @@ void ppuRP2C02::clock() {
             frameComplete = true;
         }
     }
+}
+
+// DEBUG METHODS, WILL BE REMOVED IN THE FUTURE
+void ppuRP2C02::printPaletteRAM() {
+    printf("Palette RAM content :\n");
+    for (uint8_t value : paletteRAM) {
+        printf("%X | ", value);
+    }
+    printf("\n\n");
 }

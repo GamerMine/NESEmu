@@ -1,3 +1,0 @@
-/home/maxime/CLionProjects/NESEmu/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/maxime/CLionProjects/NESEmu/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/maxime/CLionProjects/NESEmu/cmake-build-debug/CMakeFiles/NES_Emu.dir

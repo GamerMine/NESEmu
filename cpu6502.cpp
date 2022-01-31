@@ -47,7 +47,7 @@ void cpu6502::setFlag(FLAGS flag, bool value) {
 }
 
 bool cpu6502::getFlag(FLAGS flag) const {
-    return ((sr & flag) > 0);
+    return ((sr & flag) > 0) ? 1 : 0;
 }
 
 void cpu6502::clock() {
@@ -117,14 +117,16 @@ void cpu6502::nmi() {
     write(0x0100 + sp, pc & 0x00FF);
     sp--;
 
-    setFlag(I, 1);
-    setFlag(B, 1);
-    write(0x0100 + sp, sr);
     setFlag(B, 0);
+    setFlag(U, 1);
+    setFlag(I, 1);
+    write(0x0100 + sp, sr);
     sp--;
 
-    pc = read(0xFFFA);
-    pc |= read(0xFFFB) << 8;
+    addr_abs = 0xFFFA;
+    uint16_t lo = read(addr_abs + 0);
+    uint16_t hi = read(addr_abs + 1);
+    pc = (hi << 8) | lo;
 
     cycles = 8;
 }
@@ -202,7 +204,14 @@ bool cpu6502::IND() {
 
     uint16_t ptr = (hi << 8) | lo; // Create an address from the low-endian and the high-endian. i.e: $HHLL
 
-    addr_abs = (read(ptr + 1) << 8) | read(ptr + 0); // We create an address from the data cpuRead at the ptr address
+    if (lo == 0x00FF) // Simulate page boundary hardware bug
+    {
+        addr_abs = (read(ptr & 0xFF00) << 8) | read(ptr + 0);
+    }
+    else // Behave normally
+    {
+        addr_abs = (read(ptr + 1) << 8) | read(ptr + 0);
+    }
 
     return 0;
 }
@@ -609,7 +618,7 @@ bool cpu6502::JMP() {
 bool cpu6502::JSR() {
     write(0x0100 + sp, ((pc - 1) >> 8) & 0x00FF);
     sp--;
-    write(0x0100, (pc -1) & 0x00FF);
+    write(0x0100 + sp, (pc - 1) & 0x00FF);
     sp--;
 
     pc = addr_abs;
@@ -738,7 +747,7 @@ bool cpu6502::ROL() {
 bool cpu6502::ROR() {
     fetch();
 
-    uint16_t temp = (fetched >> 1) | getFlag(C);
+    uint16_t temp = (getFlag(C) << 7) | (fetched >> 1);
 
     setFlag(N, temp & 0x0080);
     setFlag(Z, (temp & 0x00FF) == 0x0000);
@@ -770,6 +779,7 @@ bool cpu6502::RTS() {
     pc = read(0x0100 + sp);
     sp++;
     pc |= read(0x0100 + sp) << 8;
+    pc++;
 
     return 0;
 }

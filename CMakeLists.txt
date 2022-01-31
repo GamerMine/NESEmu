@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 project(NES_Emu)
 
 set(CMAKE_CXX_STANDARD 23)
+SET(CMAKE_C_FLAGS_DEBUG "-D_DEBUG")
 
 LINK_LIBRARIES(X11 GL png)
 

@@ -92,11 +92,18 @@ void cpuDebug::drawCode(int x, int y, int numLines) {
 }
 
 bool cpuDebug::OnUserCreate() {
-    gamepak = std::make_shared<Gamepak>("nestest.nes");
+    gamepak = std::make_shared<Gamepak>("dk.nes");
 
     nes.insertGamepak(gamepak);
 
     mapAsm = nes.cpu.disassemble(0x0000, 0xFFFF);
+
+    std::ofstream output("decompASM.txt", std::ofstream::out);
+    std::map<uint16_t, std::string>::iterator it;
+    for (it = mapAsm.begin(); it != mapAsm.end(); it++) {
+        output << it->second.c_str() << "\n";
+    }
+    output.close();
 
     nes.reset();
 
@@ -170,6 +177,7 @@ bool cpuDebug::OnUserUpdate(float fElapsedTime) {
 
                 DrawSprite(516, 348, &nes.ppu.getPatternTable(0, selectedPalette));
                 DrawSprite(648, 348, &nes.ppu.getPatternTable(1, selectedPalette));
+                //nes.ppu.printPaletteRAM();
             }
 
             DrawSprite(0, 0, &nes.ppu.getScreen(), 2);

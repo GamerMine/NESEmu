@@ -35,6 +35,7 @@ public:
     uint8_t ppuRead(uint16_t addr);
 
     void clock(); // Like the CPU, the PPU has his clock function
+    bool nmi = false;
 
 private:
     Bus *bus = nullptr;
@@ -48,7 +49,7 @@ private:
     uint8_t ciram[2][1024];
 
     // The PPU has also a Palette RAM that can be accessed from 0x3F00 to 0x3F1F.
-    uint8_t paletteRAM[32];
+    uint8_t paletteRAM[32] = {};
 
 private:
     olc::Pixel colors[0x40]; // 0x40 represent the number of colors that the PPU is capable of generating
@@ -62,38 +63,38 @@ private:
 private:
     union {
         struct {
-            uint8_t nametableAddr1 = 1;
-            uint8_t nametableAddr2 = 1;
-            uint8_t vramAddrIncrement = 1;
-            uint8_t spritePatternTableAddr = 1;
-            uint8_t backgroundPatternTableAddr = 1;
-            uint8_t spriteSize = 1;
-            uint8_t ppuSelect = 1;
-            uint8_t generateNMI = 1;
+            uint8_t nametableAddr1 : 1;
+            uint8_t nametableAddr2 : 1;
+            uint8_t vramAddrIncrement : 1;
+            uint8_t spritePatternTableAddr : 1;
+            uint8_t backgroundPatternTableAddr : 1;
+            uint8_t spriteSize : 1;
+            uint8_t ppuSelect : 1;
+            uint8_t generateNMI : 1;
         };
         uint8_t rawData;
     } ppuCTRL;
 
     union {
         struct {
-            uint8_t greyscale = 1;
-            uint8_t showBackgroundLeft = 1;
-            uint8_t showSpritesLeft = 1;
-            uint8_t showBackground = 1;
-            uint8_t showSprites = 1;
-            uint8_t enphasizeRed = 1;
-            uint8_t enphasizeGreen = 1;
-            uint8_t enphasizeBlue = 1;
+            uint8_t greyscale : 1;
+            uint8_t showBackgroundLeft : 1;
+            uint8_t showSpritesLeft : 1;
+            uint8_t showBackground : 1;
+            uint8_t showSprites : 1;
+            uint8_t enphasizeRed : 1;
+            uint8_t enphasizeGreen : 1;
+            uint8_t enphasizeBlue : 1;
         };
         uint8_t rawData;
     } ppuMask;
 
     union {
         struct {
-            uint8_t unused = 5;
-            uint8_t spriteOverflow = 1;
-            uint8_t spriteZeroHit = 1;
-            uint8_t verticalBlank = 1;
+            uint8_t unused : 5;
+            uint8_t spriteOverflow : 1;
+            uint8_t spriteZeroHit : 1;
+            uint8_t verticalBlank : 1;
         };
         uint8_t rawData;
     } ppuStatus;
@@ -108,7 +109,13 @@ public:
     olc::Sprite& getPatternTable(uint8_t i, uint8_t palette);
     olc::Pixel& getColor(uint8_t palette, uint8_t pixel);
     bool frameComplete = false;
+
+public:
+    // DEBUG METHODS, WILL BE REMOVED IN THE FUTURE
+    void printPaletteRAM();
 };
+
+
 
 
 #endif //NES_EMU_PPURP2C02_H

@@ -54,9 +54,17 @@ void Bus::reset() {
 }
 
 void Bus::clock() {
+    // The PPU is running 3 times faster than the cpu. It means that 3 ppu clocks = 1 cpu clock
     ppu.clock();
     if (clockCounter % 3 == 0) {
         cpu.clock();
     }
+
+    // If the generate NMI is set in ppuCTRL, an NMI will be generated at each start of a frame
+    if (ppu.nmi) {
+        ppu.nmi = false;
+        cpu.nmi();
+    }
+
     clockCounter++;
 }
