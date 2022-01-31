@@ -60,9 +60,7 @@ Gamepak::Gamepak(const char *filename) {
     }
 }
 
-Gamepak::~Gamepak() {
-
-}
+Gamepak::~Gamepak() = default;
 
 bool Gamepak::cpuRead(uint16_t addr, uint8_t &data) {
     uint32_t mapped_addr = 0; // Temporary variable that contains the new offset to then read in the PRG ROM

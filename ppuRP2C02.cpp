@@ -238,6 +238,7 @@ olc::Sprite &ppuRP2C02::getPatternTable(uint8_t i, uint8_t palette) {
 }
 
 olc::Pixel& ppuRP2C02::getColor(uint8_t palette, uint8_t pixel) {
+    //printf("%X\n", (0x3F00 + (palette << 2) + pixel) & 0x3F);
     return colors[ppuRead(0x3F00 + (palette << 2) + pixel) & 0x3F];
 }
 

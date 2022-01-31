@@ -1,4 +1,4 @@
-# Install script for directory: /home/maxime/Documents/Programming/C_C++/Projects/NESEmu
+# Install script for directory: /home/maxime/CLionProjects/NESEmu
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/maxime/Documents/Programming/C_C++/Projects/NESEmu/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/maxime/CLionProjects/NESEmu/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

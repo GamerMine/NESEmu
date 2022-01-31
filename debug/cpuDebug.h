@@ -22,6 +22,7 @@ public:
     uint8_t currentPage = 0x00;
     uint8_t selectedPalette = 0x00;
     const int swatchSize = 6;
+    bool test = false;
 
     static std::string toHex(uint32_t number, uint8_t numDigits);
 
