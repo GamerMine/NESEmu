@@ -41,18 +41,18 @@ public:
     uint8_t ppuRead(uint16_t addr);
 
     void clock(); // Like the CPU, the PPU has his clock function
-    bool nmi = false;
-
-private:
-    Bus *bus = nullptr;
-
-    std::shared_ptr<Gamepak> gamepak;
-
     // The PPU has 4 nametables and 1 nametable is 1KB long. The PPU have only 2KB of VRAM, not enough for 4 nametables.
     // 2 of 4 nametables are mirrored which means they contain the same data as the 2 others.
     // So, we are creating an array of 2 * 1024 bits to store 2 nametables of 1KB each.
     // According to the nesdev wiki, it is called CIRAM.
     uint8_t ciram[2][1024];
+
+    bool nmi = false;
+private:
+
+    Bus *bus = nullptr;
+
+    std::shared_ptr<Gamepak> gamepak;
 
     // The PPU has also a Palette RAM that can be accessed from 0x3F00 to 0x3F1F.
     uint8_t paletteRAM[32] = {};

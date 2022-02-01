@@ -117,7 +117,7 @@ void ppuRP2C02::cpuWrite(uint16_t addr, uint8_t data) {
             break;
         case 0x0007: // Data
             ppuWrite(ppuAddress, data);
-            ppuAddress++;
+            ppuAddress += (ppuCTRL.vramAddrIncrement ? 32 : 1);
             break;
         case 0x4014: // OAM DMA
             break;
@@ -167,17 +167,17 @@ void ppuRP2C02::ppuWrite(uint16_t addr, uint8_t data) {
     } else if (addr >= 0x0000 && addr <= 0x1FFF) { // Pattern table locations
 
     } else if (addr >= 0x2000 && addr <= 0x3EFF) { // Nametable locations
-        if (Gamepak::getMirroringStatus() == Gamepak::MIRRORING::HORIZONTAL) {
+        if (gamepak->mirror == Gamepak::MIRRORING::HORIZONTAL) {
             if (addr >= 0x2000 && addr <= 0x27FF) {
-                ciram[0][(addr & 0x0400) & 0x0FFF] = data;
+                ciram[0][(addr & 0x03FF) & 0x0FFF] = data;
             } else if (addr >= 2800 && addr <= 0x2BFF) {
-                ciram[1][(addr & 0x0400) & 0x0FFF] = data;
+                ciram[1][(addr & 0x03FF) & 0x0FFF] = data;
             }
-        } else if (Gamepak::getMirroringStatus() == Gamepak::MIRRORING::VERTICAL) {
+        } else if (gamepak->mirror == Gamepak::MIRRORING::VERTICAL) {
             if (addr >= 0x2000 && addr <= 0x23FF || addr >= 2800 && addr <= 0x2BFF) {
-                ciram[0][(addr & 0x0400) & 0x0FFF] = data;
+                ciram[0][(addr & 0x03FF) & 0x0FFF] = data;
             } else if (addr >= 2400 && addr <= 0x27FF || addr >= 0x2C00 && addr <= 0x2FFF) {
-                ciram[1][(addr & 0x0400) & 0x0FFF] = data;
+                ciram[1][(addr & 0x03FF) & 0x0FFF] = data;
             }
         }
     } else if (addr >= 0x3F00 && addr <= 0x3FFF) { // Color palette locations
@@ -207,17 +207,17 @@ uint8_t ppuRP2C02::ppuRead(uint16_t addr) {
          */
         //data = patternTables[addr >> 12].GetPixel(addr & 0x0FFF);
     } else if (addr >= 0x2000 && addr <= 0x3EFF) { // Nametable locations
-        if (Gamepak::getMirroringStatus() == Gamepak::MIRRORING::HORIZONTAL) {
+        if (gamepak->mirror == Gamepak::MIRRORING::HORIZONTAL) {
             if (addr >= 0x2000 && addr <= 0x27FF) {
-                data = ciram[0][(addr & 0x0400) & 0x0FFF];
+                data = ciram[0][(addr & 0x03FF) & 0x0FFF];
             } else if (addr >= 2800 && addr <= 0x2BFF) {
-                data = ciram[1][(addr & 0x0400) & 0x0FFF];
+                data = ciram[1][(addr & 0x03FF) & 0x0FFF];
             }
-        } else if (Gamepak::getMirroringStatus() == Gamepak::MIRRORING::VERTICAL) {
+        } else if (gamepak->mirror == Gamepak::MIRRORING::VERTICAL) {
             if (addr >= 0x2000 && addr <= 0x23FF || addr >= 2800 && addr <= 0x2BFF) {
-                data = ciram[0][(addr & 0x0400) & 0x0FFF];
+                data = ciram[0][(addr & 0x03FF) & 0x0FFF];
             } else if (addr >= 2400 && addr <= 0x27FF || addr >= 0x2C00 && addr <= 0x2FFF) {
-                data = ciram[1][(addr & 0x0400) & 0x0FFF];
+                data = ciram[1][(addr & 0x03FF) & 0x0FFF];
             }
         }
     } else if (addr >= 0x3F00 && addr <= 0x3FFF) { // Color palette locations
@@ -286,7 +286,7 @@ void ppuRP2C02::clock() {
     }
 
     // Old TV noise generation
-    screenOut.SetPixel(cycle - 1, scanline, colors[(random() % 2) ? 0x3F : 0x30]);
+    //screenOut.SetPixel(cycle - 1, scanline, colors[(random() % 2) ? 0x3F : 0x30]);
 
     cycle++;
     if (cycle >= 341) { // This hardcoded value is the number of cycles needed for 1 line to complete

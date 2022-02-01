@@ -54,12 +54,12 @@ Gamepak::Gamepak(const char *filename) {
 
             if ((header.mapper1 & 0x08) == 0x00) {
                 if ((header.mapper1 & 0x01) == 0x00) {
-                    Gamepak::curMirroring = Gamepak::MIRRORING::HORIZONTAL;
+                    mirror = MIRRORING::HORIZONTAL;
                 } else if ((header.mapper1 & 0x01) == 0x01) {
-                    Gamepak::curMirroring = Gamepak::MIRRORING::VERTICAL;
+                    mirror = MIRRORING::VERTICAL;
                 }
             } else {
-                curMirroring = Gamepak::MIRRORING::FOUR_SCREEN;
+                mirror = MIRRORING::FOUR_SCREEN;
             }
         } else if (inesFormat == 2) { // Corresponding to NES 2.0 format
 
@@ -113,8 +113,3 @@ bool Gamepak::ppuWrite(uint16_t addr, uint8_t data) {
     }
     return false;
 }
-
-uint8_t Gamepak::getMirroringStatus() {
-    return curMirroring;
-}
-

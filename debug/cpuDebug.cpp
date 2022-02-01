@@ -98,7 +98,7 @@ void cpuDebug::drawCode(int x, int y, int numLines) {
 }
 
 bool cpuDebug::OnUserCreate() {
-    gamepak = std::make_shared<Gamepak>("mario.nes");
+    gamepak = std::make_shared<Gamepak>("dk.nes");
 
     nes.insertGamepak(gamepak);
 
@@ -184,9 +184,18 @@ bool cpuDebug::OnUserUpdate(float fElapsedTime) {
                 DrawSprite(516, 348, &nes.ppu.getPatternTable(0, selectedPalette));
                 DrawSprite(648, 348, &nes.ppu.getPatternTable(1, selectedPalette));
                 //nes.ppu.printPaletteRAM();
+
+                DrawSprite(0, 0, &nes.ppu.getScreen(), 2);
+
+                olc::Sprite& pat = nes.ppu.getPatternTable(1, selectedPalette);
+                for (uint8_t y = 0; y < 30; y++) {
+                    for (uint8_t x = 0; x < 32; x++) {
+                        uint8_t id = (uint32_t)nes.ppu.ciram[0][y * 32 + x];
+                        DrawPartialSprite(x * 16, y * 16, &pat, (id & 0x0F) << 3, ((id >> 4) & 0x0F) << 3, 8, 8, 2);
+                    }
+                }
             }
 
-            DrawSprite(0, 0, &nes.ppu.getScreen(), 2);
             break;
         case 1:
             drawRam(0, 0, 0x0000, 47, 24);

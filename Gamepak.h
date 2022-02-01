@@ -23,6 +23,7 @@
 class Gamepak {
 public:
     explicit Gamepak(const char *filename);
+
     ~Gamepak();
 
 public:
@@ -30,38 +31,38 @@ public:
 
     // Communicate with CPU Bus
     bool cpuRead(uint16_t addr, uint8_t &data);
+
     bool cpuWrite(uint16_t addr, uint8_t data);
 
     // Communicate with the PPU Bus
     bool ppuRead(uint16_t addr, uint8_t &data);
+
     bool ppuWrite(uint16_t addr, uint8_t data);
 
-public:
-
-    struct MIRRORING {
-        const static uint8_t HORIZONTAL = 0;
-        const static uint8_t VERTICAL = 1;
-        const static uint8_t ONE_SCREEN = 2;
-        const static uint8_t FOUR_SCREEN = 3;
-    };
-
-    uint8_t static getMirroringStatus();
-
 private:
+
     // NOTE: This 2 vectors are set up by mappers. It means that we don't know the size of these before inserting the
     // GamePak.
     std::vector<uint8_t> prgROM;    // The Program ROM (The ROMs where the program is contained)
+
     std::vector<uint8_t> prgRAM;    // The Program RAM
     std::vector<uint8_t> chrROM;    // The Characters Memory (The ROMs that contains the graphics data of the game)
-
     uint8_t mapperID = 0;       // Mapper ID e.g. Super Mario Bros. 3 uses the ID 4 (http://bootgod.dyndns.org:7777/profile.php?id=5)
+
     uint8_t prgROMbanks = 0; // Contains the number of Program ROMs in 16KB Units
     uint8_t prgRAMbanks = 0; // Contains the number of Program RAMs in 8KB Units
     uint8_t chrROMbanks = 0;    // Contains the number of Characters ROMs in 8KB Units
-    static uint8_t curMirroring;
-
     std::shared_ptr<Mapper> mapper;
-};
 
+public:
+
+    enum MIRRORING {
+        HORIZONTAL,
+        VERTICAL,
+        ONE_SCREEN,
+        FOUR_SCREEN,
+    } mirror = HORIZONTAL;
+
+};
 
 #endif //NES_EMU_GAMEPAK_H
