@@ -36,6 +36,17 @@ public:
     bool ppuRead(uint16_t addr, uint8_t &data);
     bool ppuWrite(uint16_t addr, uint8_t data);
 
+public:
+
+    struct MIRRORING {
+        const static uint8_t HORIZONTAL = 0;
+        const static uint8_t VERTICAL = 1;
+        const static uint8_t ONE_SCREEN = 2;
+        const static uint8_t FOUR_SCREEN = 3;
+    };
+
+    uint8_t static getMirroringStatus();
+
 private:
     // NOTE: This 2 vectors are set up by mappers. It means that we don't know the size of these before inserting the
     // GamePak.
@@ -47,6 +58,7 @@ private:
     uint8_t prgROMbanks = 0; // Contains the number of Program ROMs in 16KB Units
     uint8_t prgRAMbanks = 0; // Contains the number of Program RAMs in 8KB Units
     uint8_t chrROMbanks = 0;    // Contains the number of Characters ROMs in 8KB Units
+    static uint8_t curMirroring;
 
     std::shared_ptr<Mapper> mapper;
 };

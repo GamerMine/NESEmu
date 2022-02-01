@@ -98,7 +98,7 @@ void cpuDebug::drawCode(int x, int y, int numLines) {
 }
 
 bool cpuDebug::OnUserCreate() {
-    gamepak = std::make_shared<Gamepak>("dk.nes");
+    gamepak = std::make_shared<Gamepak>("mario.nes");
 
     nes.insertGamepak(gamepak);
 

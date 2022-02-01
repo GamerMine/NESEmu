@@ -17,7 +17,7 @@ Gamepak::Gamepak(const char *filename) {
         char name[4]; //        Constant $4E $45 $53 $1A ("NES" followed by MS-DOS end-of-file)
         uint8_t prgRomSize; //  Size of PRG ROM in 16KB units
         uint8_t chrRomSize; //  Size of CHR ROM in 8KB units
-        uint8_t mapper1; //     Flags 6 : Mapper, mirroring, battery, trainer
+        uint8_t mapper1; //     Flags 6 : Mapper, curMirroring, battery, trainer
         uint8_t mapper2; //     Flags 7 : Mapper, VS/Playchoice, NES 2.0
         uint8_t prgRamSize; //  Flags 8 : PRG RAM size
         uint8_t tvSystem1; //   Flags 9 : TV system
@@ -51,6 +51,16 @@ Gamepak::Gamepak(const char *filename) {
             chrROMbanks = header.chrRomSize;
             chrROM.resize(chrROMbanks * 8 * 1024); // The CHR ROMs are 8KB memories, so we multiply that by the number of units
             ifstream.read((char*)chrROM.data(), chrROM.size()); // We can read the next x bytes of data corresponding to the size of the vector
+
+            if ((header.mapper1 & 0x08) == 0x00) {
+                if ((header.mapper1 & 0x01) == 0x00) {
+                    Gamepak::curMirroring = Gamepak::MIRRORING::HORIZONTAL;
+                } else if ((header.mapper1 & 0x01) == 0x01) {
+                    Gamepak::curMirroring = Gamepak::MIRRORING::VERTICAL;
+                }
+            } else {
+                curMirroring = Gamepak::MIRRORING::FOUR_SCREEN;
+            }
         } else if (inesFormat == 2) { // Corresponding to NES 2.0 format
 
         }
@@ -103,3 +113,8 @@ bool Gamepak::ppuWrite(uint16_t addr, uint8_t data) {
     }
     return false;
 }
+
+uint8_t Gamepak::getMirroringStatus() {
+    return curMirroring;
+}
+
