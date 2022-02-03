@@ -94,6 +94,8 @@ void ppuRP2C02::cpuWrite(uint16_t addr, uint8_t data) {
     switch (addr) {
         case 0x0000: // Control
             ppuCTRL.rawData = data;
+            tRegister.nametableSelect1 = ppuCTRL.nametableAddr1;
+            tRegister.nametableSelect2 = ppuCTRL.nametableAddr2;
             break;
         case 0x0001: // Mask
             ppuMask.rawData = data;
@@ -105,19 +107,29 @@ void ppuRP2C02::cpuWrite(uint16_t addr, uint8_t data) {
         case 0x0004: // OAM Data
             break;
         case 0x0005: // Scroll
+            if (addressLatch == 0x00) {
+                fineX = data & 0x07;
+                tRegister.coarseX = data >> 3;
+                addressLatch = 0x01;
+            } else {
+                tRegister.fineY = data & 0x07;
+                tRegister.coarseY = data >> 3;
+                addressLatch = 0x00;
+            }
             break;
         case 0x0006: // Address
             if (addressLatch == 0x00) {
-                ppuAddress = (ppuAddress & 0x00FF) | (data << 8);
+                tRegister.rawData = (uint16_t)((data & 0x3F) << 8) | (tRegister.rawData & 0x00FF);
                 addressLatch = 0x01;
             } else {
+                tRegister.rawData = (tRegister.rawData & 0xFF00) | data;
+                vRegister = tRegister;
                 addressLatch = 0x00;
-                ppuAddress = (ppuAddress & 0xFF00) | data;
             }
             break;
         case 0x0007: // Data
-            ppuWrite(ppuAddress, data);
-            ppuAddress += (ppuCTRL.vramAddrIncrement ? 32 : 1);
+            ppuWrite(vRegister.rawData, data);
+            vRegister.rawData += (ppuCTRL.vramAddrIncrement ? 32 : 1);
             break;
         case 0x4014: // OAM DMA
             break;
@@ -148,10 +160,10 @@ uint8_t ppuRP2C02::cpuRead(uint16_t addr) {
             // According to nesdev, when reading from the ppuData register, we wants to have a read buffer. But, reading
             // palette data is direct, no need of a read buffer.
             data = readBuffer;
-            readBuffer = ppuRead(ppuAddress);
+            readBuffer = ppuRead(vRegister.rawData);
 
-            if (ppuAddress >= 0x3F00) data = readBuffer;
-            ppuAddress++;
+            if (vRegister.rawData >= 0x3F00) data = readBuffer;
+            vRegister.rawData += (ppuCTRL.vramAddrIncrement ? 32 : 1);
             break;
         case 0x4014: // OAM DMA
             break;
@@ -165,7 +177,7 @@ void ppuRP2C02::ppuWrite(uint16_t addr, uint8_t data) {
     if (gamepak->ppuWrite(addr, data)) {
 
     } else if (addr >= 0x0000 && addr <= 0x1FFF) { // Pattern table locations
-
+        // Pattern tables are managed by the getPatternTable function
     } else if (addr >= 0x2000 && addr <= 0x3EFF) { // Nametable locations
         if (gamepak->mirror == Gamepak::MIRRORING::HORIZONTAL) {
             if (addr >= 0x2000 && addr <= 0x27FF) {
@@ -244,6 +256,7 @@ olc::Sprite &ppuRP2C02::getNametable(uint8_t i) {
 olc::Sprite &ppuRP2C02::getPatternTable(uint8_t i, uint8_t palette) {
     // The pattern table is divided into 2 256 tiles planes. Each tile is 16 bytes made of two planes.
     // So, one tile plane is 4096 bytes long (4KB or 0x0FFF)
+    uint8_t num = 0x00;
     for (int x = 0; x < 16; x++) {
         for (int y = 0; y < 16; y++) {
             // The idea here is to make a 1D offset from x and y
@@ -273,20 +286,160 @@ olc::Pixel& ppuRP2C02::getColor(uint8_t palette, uint8_t pixel) {
 
 void ppuRP2C02::clock() {
 
-    if (scanline == -1 && cycle == 1) {
-        ppuStatus.verticalBlank = 0;
+    auto incrementScrollX = [&]() {
+        if (ppuMask.showBackground || ppuMask.showSprites) {
+            if (vRegister.coarseX == 31) {
+                vRegister.coarseX = 0;
+                vRegister.nametableSelect1 = ~vRegister.nametableSelect1;
+            } else {
+                vRegister.coarseX++;
+            }
+        }
+    };
+
+    auto incrementScrollY = [&]() {
+        if (ppuMask.showBackground || ppuMask.showSprites) {
+            if (vRegister.fineY < 7) {
+                vRegister.fineY++;
+            } else {
+                vRegister.fineY = 0;
+                if (vRegister.coarseY == 29) {
+                    vRegister.coarseY = 0;
+                    vRegister.nametableSelect2 = ~vRegister.nametableSelect2;
+                } else if (vRegister.coarseY == 31) {
+                    vRegister.coarseY = 0;
+                } else {
+                    vRegister.coarseY++;
+                }
+            }
+        }
+    };
+
+    auto transferAddressX = [&]() {
+        if (ppuMask.showBackground || ppuMask.showSprites) {
+            vRegister.nametableSelect1 = tRegister.nametableSelect1;
+            vRegister.coarseX = tRegister.coarseX;
+        }
+    };
+
+    auto transferAddressY = [&]() {
+        if (ppuMask.showBackground || ppuMask.showSprites) {
+            vRegister.fineY = tRegister.fineY;
+            vRegister.nametableSelect2 = tRegister.nametableSelect2;
+            vRegister.coarseY = tRegister.coarseY;
+        }
+    };
+
+    auto loadBackgroundShifters = [&]() {
+        bgShifterPatternLO = (bgShifterPatternLO & 0xFF00) | bgNextTileLSB;
+        bgShifterPatternHI = (bgShifterPatternHI & 0xFF00) | bgNextTileMSB;
+
+        bgShifterAttributeLO = (bgShifterAttributeLO & 0xFF00) | ((bgNextTileAttribute & 0b01) ? 0xFF : 0x00);
+        bgShifterAttributeHI = (bgShifterAttributeHI & 0xFF00) | ((bgNextTileAttribute & 0b10) ? 0xFF : 0x00);
+    };
+
+    auto updateBackgroundShifters = [&]() {
+        if (ppuMask.showBackground) {
+            bgShifterPatternLO <<= 1;
+            bgShifterPatternHI <<= 1;
+
+            bgShifterAttributeLO <<= 1;
+            bgShifterAttributeHI <<= 1;
+        }
+    };
+
+    if (scanline >= -1 && scanline < 240) {
+
+        if (scanline == 0 && cycle == 0) {
+            cycle = 1;
+        }
+
+        if (scanline == -1 && cycle == 1) {
+            ppuStatus.verticalBlank = 0;
+        }
+
+        if ((cycle >= 2 && cycle < 258) || (cycle >= 321 && cycle < 338)) {
+
+            updateBackgroundShifters();
+
+            switch ((cycle - 1) % 8) {
+                case 0:
+                    loadBackgroundShifters();
+                    bgNextTileID = ppuRead(0x2000 | (vRegister.rawData & 0x0FFF));
+                    break;
+                case 2:
+                    bgNextTileAttribute = ppuRead(0x23C0 | (vRegister.nametableSelect2 << 11) | (vRegister.nametableSelect1 << 10) | ((vRegister.coarseY >> 2) << 3) | (vRegister.coarseX >> 2));
+                    if (vRegister.coarseY & 0x02) bgNextTileAttribute >>= 4;
+                    if (vRegister.coarseX & 0x02) bgNextTileAttribute >>= 2;
+                    bgNextTileAttribute &= 0x03;
+                    break;
+                case 4:
+                    bgNextTileLSB = ppuRead((ppuCTRL.backgroundPatternTableAddr << 12) + ((uint16_t)bgNextTileID << 4) + (vRegister.fineY));
+                    break;
+                case 6:
+                    bgNextTileMSB = ppuRead((ppuCTRL.backgroundPatternTableAddr << 12) + ((uint16_t)bgNextTileID << 4) + (vRegister.fineY) + 8);
+                    break;
+                case 7:
+                    incrementScrollX();
+                    break;
+            }
+        }
+
+        if (cycle == 256) {
+            incrementScrollY();
+        }
+
+        if (cycle == 257) {
+            loadBackgroundShifters();
+            transferAddressX();
+        }
+
+        if (cycle == 338 || cycle == 340)
+        {
+            bgNextTileID = ppuRead(0x2000 | (vRegister.rawData & 0x0FFF));
+        }
+
+        if (scanline == -1 && cycle >= 280 && cycle < 305)
+        {
+            // End of vertical blank period so reset the Y address ready for rendering
+            transferAddressY();
+        }
+
     }
 
-    // If the generate NMI is set in ppuCTRL, an NMI will be generated at each start of a frame
-    if (scanline == 241 && cycle == 1) {
-        ppuStatus.verticalBlank = 1;
-        if (ppuCTRL.generateNMI) {
-            nmi = true;
+
+
+    if (scanline >= 241 && scanline < 261)
+    {
+        if (scanline == 241 && cycle == 1)
+        {
+            // Effectively end of frame, so set vertical blank flag
+            ppuStatus.verticalBlank = 1;
+
+            if (ppuCTRL.generateNMI)
+                nmi = true;
         }
     }
 
+    uint8_t bgPixel = 0x00;
+    uint8_t bgPalette = 0x00;
+
+    if (ppuMask.showBackground) {
+        uint16_t bit = 0x8000 >> fineX;
+
+        uint8_t pixel0 = (bgShifterPatternLO & bit) > 0;
+        uint8_t pixel1 = (bgShifterPatternHI & bit) > 0;
+
+        bgPixel = (pixel1 << 1) | pixel0;
+
+        uint8_t palette0 = (bgShifterAttributeLO & bit) > 0;
+        uint8_t palette1 = (bgShifterAttributeHI & bit) > 0;
+
+        bgPalette = (palette1 << 1) | palette0;
+    }
+
     // Old TV noise generation
-    //screenOut.SetPixel(cycle - 1, scanline, colors[(random() % 2) ? 0x3F : 0x30]);
+    screenOut.SetPixel(cycle - 1, scanline, getColor(bgPalette, bgPixel));
 
     cycle++;
     if (cycle >= 341) { // This hardcoded value is the number of cycles needed for 1 line to complete

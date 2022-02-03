@@ -105,9 +105,34 @@ private:
         uint8_t rawData;
     } ppuStatus;
 
+    union ppuScroll {
+        struct {
+            uint16_t coarseX : 5;
+            uint16_t coarseY : 5;
+            uint16_t nametableSelect1 : 1;
+            uint16_t nametableSelect2 : 1;
+            uint16_t fineY : 3;
+            uint16_t unused : 1;
+        };
+        uint16_t rawData = 0x0000;
+    };
+
     uint8_t addressLatch = 0x00; // The CPU can only write 8 bit values. This is the reason of this latch
     uint8_t readBuffer = 0x00;
-    uint16_t ppuAddress = 0x0000;
+
+    ppuScroll vRegister; // Current VRAM Address
+    ppuScroll tRegister; // Temporary VRAM Address
+    uint8_t fineX = 0x00; // Fine X Scroll
+
+    uint8_t bgNextTileID = 0x00;
+    uint8_t bgNextTileAttribute = 0x00;
+    uint8_t bgNextTileLSB = 0x00;
+    uint8_t bgNextTileMSB = 0x00;
+
+    uint16_t bgShifterPatternLO = 0x0000;
+    uint16_t bgShifterPatternHI = 0x0000;
+    uint16_t bgShifterAttributeLO = 0x0000;
+    uint16_t bgShifterAttributeHI = 0x0000;
 
 public:
     olc::Sprite& getScreen();
