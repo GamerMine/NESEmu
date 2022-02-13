@@ -5,16 +5,16 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 //
-// Created by maxime on 27/12/2021.
+// Created by maxime on 06/02/2022.
 //
 
-#include "Mapper.h"
+#ifndef NES_EMU_NESEMU_H
+#define NES_EMU_NESEMU_H
 
-Mapper::Mapper(uint8_t prgUnits, uint8_t chrUnits) {
-    numPRGUnits = prgUnits;
-    numCHRUnits = chrUnits;
-}
+class NESEmu {
+public:
+    int main();
+};
 
-Mapper::~Mapper() {
 
-}
+#endif //NES_EMU_NESEMU_H

@@ -1,8 +1,8 @@
 // Copyright (c) 2021-2022 Dwight Studio's Team <support@dwight-studio.fr>
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
-//  License, v. 2.0. If a copy of the MPL was not distributed with this
-//  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "cpuDebug.h"
 
@@ -98,7 +98,7 @@ void cpuDebug::drawCode(int x, int y, int numLines) {
 }
 
 bool cpuDebug::OnUserCreate() {
-    gamepak = std::make_shared<Gamepak>("dk3.nes");
+    gamepak = std::make_shared<Gamepak>("duck.nes");
 
     nes.insertGamepak(gamepak);
 
@@ -111,6 +111,8 @@ bool cpuDebug::OnUserCreate() {
     }
     output.close();
 
+    olc::SOUND::InitialiseAudio(44100, 1, 8, 512);
+
     nes.reset();
 
     return true;
@@ -118,6 +120,16 @@ bool cpuDebug::OnUserCreate() {
 
 bool cpuDebug::OnUserUpdate(float fElapsedTime) {
     Clear(olc::DARK_BLUE);
+
+    nes.controllers[0] = 0x00;
+    nes.controllers[0] |= GetKey(olc::Key::A).bHeld ? 0x80 : 0x00;      // A key
+    nes.controllers[0] |= GetKey(olc::Key::B).bHeld ? 0x40 : 0x00;      // B key
+    nes.controllers[0] |= GetKey(olc::Key::W).bHeld ? 0x20 : 0x00;      // Select key
+    nes.controllers[0] |= GetKey(olc::Key::X).bHeld ? 0x10 : 0x00;      // Start key
+    nes.controllers[0] |= GetKey(olc::Key::UP).bHeld ? 0x08 : 0x00;     // Up key
+    nes.controllers[0] |= GetKey(olc::Key::DOWN).bHeld ? 0x04 : 0x00;   // Down key
+    nes.controllers[0] |= GetKey(olc::Key::LEFT).bHeld ? 0x02 : 0x00;   // Left key
+    nes.controllers[0] |= GetKey(olc::Key::RIGHT).bHeld ? 0x01 : 0x00;  // Right key
 
     if (run) {
         if (residualTime > 0.0f) {
@@ -201,6 +213,12 @@ bool cpuDebug::OnUserUpdate(float fElapsedTime) {
         case 1:
             drawRam(0, 0, 0x0000, 47, 24);
     }
+
+    return true;
+}
+
+bool cpuDebug::OnUserDestroy() {
+    olc::SOUND::DestroyAudio();
 
     return true;
 }

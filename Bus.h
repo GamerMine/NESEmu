@@ -1,8 +1,8 @@
 // Copyright (c) 2021-2022 Dwight Studio's Team <support@dwight-studio.fr>
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
-//  License, v. 2.0. If a copy of the MPL was not distributed with this
-//  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 //
 // Created by maxime on 20/12/2021.
@@ -35,6 +35,8 @@ public: // Devices connected to the bus
 
     std::shared_ptr<Gamepak> gamepak;
 
+    uint8_t controllers[2];
+
 public: // Read and Write data on the bus
 
     // CPU BUS
@@ -49,6 +51,8 @@ public: // System Interface
 
 private:
     uint32_t clockCounter = 0;
+
+    uint8_t controllers_status[2];
 
 };
 

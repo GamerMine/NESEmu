@@ -1,8 +1,8 @@
 // Copyright (c) 2021-2022 Dwight Studio's Team <support@dwight-studio.fr>
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
-//  License, v. 2.0. If a copy of the MPL was not distributed with this
-//  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 //
 // Created by maxime on 20/12/2021.
@@ -33,6 +33,8 @@ void Bus::cpuWrite(uint16_t addr, uint8_t data) {
         cpuRAM[addr & 0x07FF] = data;
     } else if (addr >= 0x2000 && addr <= 0x3FFF) {
         ppu.cpuWrite(addr & 0x0007, data);
+    } else if (addr >= 0x4016 && addr <= 0x4017) {
+        controllers_status[addr & 0x0001] = controllers[addr & 0x0001];
     }
 }
 
@@ -44,6 +46,9 @@ uint8_t Bus::cpuRead(uint16_t addr) {
         data = cpuRAM[addr & 0x07FF];
     } else if (addr >= 0x2000 && addr <= 0x3FFF) {
         data = ppu.cpuRead(addr & 0x0007);
+    } else if (addr >= 0x4016 && addr <= 0x4017) {
+        data = (controllers_status[addr & 0x0001] & 0x80) > 0;
+        controllers_status[addr & 0x0001] <<= 1;
     }
 
     return data;

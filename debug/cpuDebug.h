@@ -1,8 +1,8 @@
 // Copyright (c) 2021-2022 Dwight Studio's Team <support@dwight-studio.fr>
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
-//  License, v. 2.0. If a copy of the MPL was not distributed with this
-//  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 //
 // Created by maxime on 24/12/2021.
@@ -10,9 +10,13 @@
 
 #ifndef NES_EMU_CPUDEBUG_H
 #define NES_EMU_CPUDEBUG_H
-#define OLC_PGE_APPLICATION
 
+#define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
+
+#define OLC_PGEX_SOUND
+#include "olcPGEX_Sound.h"
+
 #include "../Bus.h"
 
 class cpuDebug : public olc::PixelGameEngine{
@@ -38,6 +42,7 @@ public:
 
     bool OnUserCreate() override;
     bool OnUserUpdate(float fElapsedTime) override;
+    bool OnUserDestroy() override;
 
 };
 

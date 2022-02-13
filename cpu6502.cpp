@@ -1,8 +1,8 @@
 // Copyright (c) 2021-2022 Dwight Studio's Team <support@dwight-studio.fr>
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
-//  License, v. 2.0. If a copy of the MPL was not distributed with this
-//  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 //
 // Created by maxime on 20/12/2021.
@@ -292,7 +292,8 @@ bool cpu6502::ADC() {
     setFlag(Z, (sum & 0x00FF) == 0); // Set the Zero flag if the sum is equal to 0x0000
     setFlag(C, sum > 255); // Set the Carry flag if the sum is greater than 255 (the max 8-bit value)
     // To understand this check : http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html
-    setFlag(V, !((ac ^ fetched) & 0x80) && ((ac ^ sum) & 0x80));
+    //setFlag(V, !((ac ^ fetched) & 0x80) && ((ac ^ sum) & 0x80));
+    setFlag(V, (~((uint16_t)ac ^ (uint16_t)fetched) & ((uint16_t)ac ^ (uint16_t)sum)) & 0x0080);
 
     ac = sum & 0x00FF; // The Accumulator is an 8 bit value, so we only keep the 8-bit value
 
@@ -708,7 +709,7 @@ bool cpu6502::PHA() {
 
 bool cpu6502::PHP() {
     setFlag(B, 1);
-    write(0x0100 + sp, sr & 0x00FF);
+    write(0x0100 + sp, sr);
     setFlag(B, 0);
     sp--;
 
@@ -757,7 +758,7 @@ bool cpu6502::ROR() {
 
     setFlag(N, temp & 0x0080);
     setFlag(Z, (temp & 0x00FF) == 0x0000);
-    setFlag(C, (temp & 0xFF00) > 0x0000);
+    setFlag(C, fetched & 0x01);
 
     if (instructions[opcode].addrmode == & cpu6502::ACC) {
         ac = temp & 0x00FF;
@@ -793,12 +794,14 @@ bool cpu6502::RTS() {
 bool  cpu6502::SBC() {
     fetch();
 
-    uint16_t temp = ac - fetched - getFlag(C);
+    uint16_t value = fetched ^ 0x00FF;
+
+    uint16_t temp = ac + value + getFlag(C);
 
     setFlag(N, temp & 0x0080);
     setFlag(Z, (temp & 0x00FF) == 0x0000);
     setFlag(C, (temp & 0xFF00) > 0x0000);
-    setFlag(V, !((ac ^ fetched) & 0x80) && ((ac ^ temp) & 0x80));
+    setFlag(V, (temp ^ ac) & (temp ^ value) & 0x0080);
 
     ac = temp & 0x00FF;
 
