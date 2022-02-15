@@ -32,13 +32,15 @@ public:
     uint8_t currentPage = 0x00;
     uint8_t selectedPalette = 0x00;
     const int swatchSize = 6;
-    bool test = false;
+    bool showOAM = false;
+    bool hideDebug = false;
 
     static std::string toHex(uint32_t number, uint8_t numDigits);
 
     void drawRam(int x, int y, uint16_t numAddr, int numRows, int numColumns);
     void drawCpu(int x, int y);
     void drawCode(int x, int y, int numLines);
+    void drawOAM(int x, int y);
 
     bool OnUserCreate() override;
     bool OnUserUpdate(float fElapsedTime) override;

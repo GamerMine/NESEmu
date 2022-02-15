@@ -97,8 +97,19 @@ void cpuDebug::drawCode(int x, int y, int numLines) {
     }
 }
 
+void cpuDebug::drawOAM(int x, int y) {
+    for (int i = 0; i < 26; i++) {
+        std::string s = toHex(i, 2) + ": (" + std::to_string(nes.ppu.oam[i * 4 + 3])
+                + ", " + std::to_string(nes.ppu.oam[i * 4]) + ") "
+                + "ID: " + toHex(nes.ppu.oam[i * 4 + 1], 2) + " "
+                + "ATT: " + toHex(nes.ppu.oam[i * 4 + 2], 2);
+
+        DrawString(x, y + i * 10, s);
+    }
+}
+
 bool cpuDebug::OnUserCreate() {
-    gamepak = std::make_shared<Gamepak>("duck.nes");
+    gamepak = std::make_shared<Gamepak>("mario.nes");
 
     nes.insertGamepak(gamepak);
 
@@ -111,7 +122,7 @@ bool cpuDebug::OnUserCreate() {
     }
     output.close();
 
-    olc::SOUND::InitialiseAudio(44100, 1, 8, 512);
+    //olc::SOUND::InitialiseAudio(44100, 1, 8, 512);
 
     nes.reset();
 
@@ -152,39 +163,61 @@ bool cpuDebug::OnUserUpdate(float fElapsedTime) {
         }
     }
 
-    if (GetKey(olc::Key::R).bPressed) {
-        nes.reset();
-    }
-    if (GetKey(olc::Key::F).bPressed) {
-        do {
-            nes.clock();
-        } while (!nes.ppu.frameComplete);
-        do {
-            nes.clock();
-        } while (nes.cpu.complete());
-        nes.ppu.frameComplete = false;
-    }
-    if (GetKey(olc::Key::SPACE).bPressed) {
-        run = !run;
-    }
-    if (GetKey(olc::Key::N).bPressed) {
-        if (currentPage >= 1) {
-            currentPage = 0;
+    if (GetKey(olc::Key::H).bPressed) {
+        if (hideDebug) {
+            SetScreenSize(780, 480);
+            olc_UpdateViewport();
         } else {
-            currentPage++;
+            SetScreenSize(480, 480);
+            olc_UpdateViewport();
         }
+        hideDebug = !hideDebug;
     }
 
-    if (GetKey(olc::Key::P).bPressed) {
-        ++selectedPalette &= 0x07;
-    }
+    if (hideDebug) {
+        DrawSprite(0, 0, &nes.ppu.getScreen(), 2);
+    } else {
 
-    switch (currentPage) {
-        case 0:
-            drawCpu(516, 2);
-            drawCode(516, 72, 26);
-            if (!test) {
-                test = false;
+        if (GetKey(olc::Key::R).bPressed) {
+            nes.reset();
+        }
+        if (GetKey(olc::Key::F).bPressed) {
+            do {
+                nes.clock();
+            } while (!nes.ppu.frameComplete);
+            do {
+                nes.clock();
+            } while (nes.cpu.complete());
+            nes.ppu.frameComplete = false;
+        }
+        if (GetKey(olc::Key::SPACE).bPressed) {
+            run = !run;
+        }
+        if (GetKey(olc::Key::N).bPressed) {
+            if (currentPage >= 1) {
+                currentPage = 0;
+            } else {
+                currentPage++;
+            }
+        }
+
+        if (GetKey(olc::Key::P).bPressed) {
+            ++selectedPalette &= 0x07;
+        }
+
+        if (GetKey(olc::Key::O).bPressed) {
+            showOAM = !showOAM;
+        }
+
+        switch (currentPage) {
+            case 0:
+                drawCpu(516, 2);
+                if (showOAM) {
+                    drawOAM(516, 72);
+                } else {
+                    drawCode(516, 72, 26);
+                }
+
                 for (int p = 0; p < 8; p++) {
                     for (int s = 0; s < 4; s++) {
                         FillRect(516 + p * (swatchSize * 5) + s * swatchSize, 340, swatchSize, swatchSize,
@@ -207,11 +240,11 @@ bool cpuDebug::OnUserUpdate(float fElapsedTime) {
                         DrawPartialSprite(x * 16, y * 16, &pat, (id & 0x0F) << 3, ((id >> 4) & 0x0F) << 3, 8, 8, 2);
                     }
                 }*/
-            }
 
-            break;
-        case 1:
-            drawRam(0, 0, 0x0000, 47, 24);
+                break;
+            case 1:
+                drawRam(0, 0, 0x0000, 47, 24);
+        }
     }
 
     return true;

@@ -33,6 +33,10 @@ void Bus::cpuWrite(uint16_t addr, uint8_t data) {
         cpuRAM[addr & 0x07FF] = data;
     } else if (addr >= 0x2000 && addr <= 0x3FFF) {
         ppu.cpuWrite(addr & 0x0007, data);
+    } else if (addr == 0x4014) {
+        dmaPage = data;
+        dmaAddr = 0x00;
+        isDMAActive = true;
     } else if (addr >= 0x4016 && addr <= 0x4017) {
         controllers_status[addr & 0x0001] = controllers[addr & 0x0001];
     }
@@ -65,13 +69,37 @@ void Bus::reset() {
 }
 
 void Bus::clock() {
-    // The PPU is running 3 times faster than the cpu. It means that 3 ppu clocks = 1 cpu clock
+    // The PPU is running 3 times faster than the cpu. It means that 3 ppu clocks = 1 cpu clock.
     ppu.clock();
     if (clockCounter % 3 == 0) {
-        cpu.clock();
+        if (isDMAActive) { // When a DMA transfer is active, the CPU is entirely paused.
+
+            if (dmaFlag) {
+                if (clockCounter % 2 == 1) { // The start of a DMA is synchronized with the clock counter being an odd cycle.
+                    dmaFlag = false;
+                }
+            } else {
+                // We can start the reading/writing process
+                if (clockCounter % 2 == 0) {
+                    dmaData = cpuRead(dmaPage << 8 | dmaAddr); // Read the DMA data
+                } else {
+                    ppu.oam[dmaAddr] = dmaData;
+                    dmaAddr++;
+
+                    if (dmaAddr == 0x00) { // After 0xFF, there is... 0x00. So, with that we can assure that the page is totally copied into the OAM.
+                        // Reset all the "flags"
+                        isDMAActive = false;
+                        dmaFlag = true;
+                    }
+                }
+            }
+
+        } else {
+            cpu.clock();
+        }
     }
 
-    // If the generate NMI is set in ppuCTRL, an NMI will be generated at each start of a frame
+    // If the generated NMI is set in ppuCTRL, an NMI will be generated at each start of a frame.
     if (ppu.nmi) {
         ppu.nmi = false;
         cpu.nmi();

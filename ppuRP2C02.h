@@ -47,7 +47,10 @@ public:
     // According to the nesdev wiki, it is called CIRAM.
     uint8_t ciram[2][1024];
 
+    uint8_t *oam = (uint8_t *)OAM;
+
     bool nmi = false;
+
 private:
 
     Bus *bus = nullptr;
@@ -66,6 +69,7 @@ private:
     int16_t scanline = 0;
     int16_t cycle = 0;
 
+// PPU registers
 private:
     union {
         struct {
@@ -117,6 +121,13 @@ private:
         uint16_t rawData = 0x0000;
     };
 
+    struct objectAttributeMemory {
+        uint8_t posY;       // Y position of top of sprite
+        uint8_t tileIndex;  // Tile index number;
+        uint8_t attribute;  // Attributes
+        uint8_t posX;       // X position of left side of sprite
+    } OAM[64];
+
     uint8_t addressLatch = 0x00; // The CPU can only write 8 bit values. This is the reason of this latch
     uint8_t readBuffer = 0x00;
 
@@ -134,6 +145,8 @@ private:
     uint16_t bgShifterAttributeLO = 0x0000;
     uint16_t bgShifterAttributeHI = 0x0000;
 
+    uint8_t oamAddr = 0x00;
+
 public:
     olc::Sprite& getScreen();
     olc::Sprite& getNametable(uint8_t i);
@@ -141,9 +154,6 @@ public:
     olc::Pixel& getColor(uint8_t palette, uint8_t pixel);
     bool frameComplete = false;
 
-public:
-    // DEBUG METHODS, WILL BE REMOVED IN THE FUTURE
-    void printPaletteRAM();
 };
 
 

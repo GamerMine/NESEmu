@@ -103,8 +103,10 @@ void ppuRP2C02::cpuWrite(uint16_t addr, uint8_t data) {
         case 0x0002: // Status
             break;
         case 0x0003: // OAM Address
+            oamAddr = data;
             break;
         case 0x0004: // OAM Data
+            oam[oamAddr] = data;
             break;
         case 0x0005: // Scroll
             if (addressLatch == 0x00) {
@@ -131,8 +133,6 @@ void ppuRP2C02::cpuWrite(uint16_t addr, uint8_t data) {
             ppuWrite(vRegister.rawData, data);
             vRegister.rawData += (ppuCTRL.vramAddrIncrement ? 32 : 1);
             break;
-        case 0x4014: // OAM DMA
-            break;
     }
 }
 
@@ -151,6 +151,7 @@ uint8_t ppuRP2C02::cpuRead(uint16_t addr) {
         case 0x0003: // OAM Address
             break;
         case 0x0004: // OAM Data
+            data = oam[oamAddr];
             break;
         case 0x0005: // Scroll
             break;
@@ -164,8 +165,6 @@ uint8_t ppuRP2C02::cpuRead(uint16_t addr) {
 
             if (vRegister.rawData >= 0x3F00) data = readBuffer;
             vRegister.rawData += (ppuCTRL.vramAddrIncrement ? 32 : 1);
-            break;
-        case 0x4014: // OAM DMA
             break;
     }
 
@@ -451,13 +450,4 @@ void ppuRP2C02::clock() {
             frameComplete = true;
         }
     }
-}
-
-// DEBUG METHODS, WILL BE REMOVED IN THE FUTURE
-void ppuRP2C02::printPaletteRAM() {
-    printf("Palette RAM content :\n");
-    for (uint8_t value : paletteRAM) {
-        printf("%X | ", value);
-    }
-    printf("\n\n");
 }

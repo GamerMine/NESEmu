@@ -52,7 +52,16 @@ public: // System Interface
 private:
     uint32_t clockCounter = 0;
 
+    // This represents the two controllers input of the NES.
     uint8_t controllers_status[2];
+
+    // The DMA is actually on the CPU Bus.
+    // The dmaPage (PP) and dmaAddr (AA) represent the full address : 0xPPAA.
+    uint8_t dmaPage = 0x00;
+    uint8_t dmaAddr = 0x00;
+    uint8_t dmaData = 0x00;
+    bool isDMAActive = false;
+    bool dmaFlag = true;
 
 };
 
