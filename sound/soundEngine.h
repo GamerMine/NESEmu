@@ -24,20 +24,34 @@ public:
     void destroyEngine() const;
 
 public:
-    enum TONETYPE {
-        SQUARE,
-        TRIANGLE,
-        NOISE,
-    };
 
     ALCdevice* audioDevice{};
     ALCcontext* audioContext{};
 
-    // https://github.com/kcat/openal-soft/blob/master/examples/altonegen.c
-    ALuint generateTone(enum TONETYPE tonetype, ALuint frequency, ALuint sampleRate, ALfloat gain);
+    enum TONETYPE {
+        PULSE_WAVE,
+        TRIANGLE,
+        NOISE,
+    };
+
+    class Tone {
+    public:
+        TONETYPE tonetype;
+        ALuint buffer;
+        ALuint sampleRate;
+
+    public:
+        Tone(TONETYPE tonetype, ALuint buffer, ALuint sampleRate);
+    };
+
+public:
+    static Tone generatePulseWave(ALuint freq, ALfloat gain, ALfloat pulseWidth, ALuint sampleRate, ALfloat nbHarmonics);
+
+    static bool playTone(Tone tone);
 
 private:
-    ALfloat generateSquareWave(ALfloat* data, ALuint frequency, ALuint harmonicNb, ALfloat gain);
+    static ALfloat* generateDataBuffer(ALuint sampleRate);
+    static ALuint generateBuffer(ALfloat *data, ALuint sampleRate);
 
 };
 

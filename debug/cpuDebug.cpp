@@ -124,7 +124,8 @@ bool cpuDebug::OnUserCreate() {
     output.close();
 
     audioEngine.initializeEngine();
-    audioEngine.generateTone(soundEngine::SQUARE, 440, 0, 1);
+    soundEngine::Tone tone = soundEngine::generatePulseWave(265, 0.1, 0.5, 44100, 30);
+    soundEngine::playTone(tone);
 
     nes.reset();
 

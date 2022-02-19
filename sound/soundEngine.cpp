@@ -11,6 +11,8 @@
 #include "soundEngine.h"
 #include <stdexcept>
 #include <cmath>
+#include "AL/alext.h"
+
 
 soundEngine::soundEngine() = default;
 
@@ -18,7 +20,7 @@ soundEngine::~soundEngine() = default;
 
 bool soundEngine::initializeEngine(){
 
-    audioDevice = alcOpenDevice(alcGetString(nullptr, ALC_DEFAULT_DEVICE_SPECIFIER));
+    audioDevice = alcOpenDevice(nullptr);
     if (!audioDevice) {
         throw std::runtime_error("Unable to open the audio device.");
         return false;
@@ -40,62 +42,66 @@ void soundEngine::destroyEngine() const {
     alcCloseDevice(audioDevice);
 }
 
-ALfloat soundEngine::generateSquareWave(ALfloat* data, ALuint frequency, ALuint harmonicNb, ALfloat gain) {
-    // Using the Gibbs phenomenon
-    ALfloat value;
+soundEngine::Tone soundEngine::generatePulseWave(ALuint freq, ALfloat gain, ALfloat pulseWidth, ALuint sampleRate, ALfloat nbHarmonics) {
+    ALuint i, h, buffer;
+    ALfloat time, dTime;
+    ALfloat *data;
 
-    for (ALuint i = 0; i < harmonicNb; i++) {
-        value += gain * (sin((2 * harmonicNb + 1) * 2 * M_PI * frequency) / (2 * harmonicNb + 1));
+    time = 0;
+    dTime = 1 / (ALfloat)sampleRate;
+    data = generateDataBuffer(sampleRate);
+
+    for (i = 0; i < sampleRate; i++) {
+        ALfloat value;
+        for (h = 1; h < nbHarmonics; h++) {
+            value += (ALfloat)((1 / (ALfloat)h) * sin(M_PI * (ALfloat)h * pulseWidth) * cos(2 * M_PI * (ALfloat)h * (ALfloat)freq * time));
+        }
+        value *= (ALfloat)(gain * pulseWidth + ((2 * gain) / M_PI));
+        data[i] = value;
+        time += dTime;
     }
-    value *= (4 / M_PI);
 
-    printf("Actual value: %f\n", value);
+    buffer = generateBuffer(data, sampleRate);
 
-    return value;
+    return {soundEngine::PULSE_WAVE, buffer, sampleRate};
 }
 
-ALuint soundEngine::generateTone(soundEngine::TONETYPE tonetype, ALuint frequency, ALuint sampleRate, ALfloat gain) {
-    const ALuint nbHarmonics = 20;
+bool soundEngine::playTone(soundEngine::Tone tone) {
+    ALuint source;
 
-    ALuint buffer;
+    source = 0;
+    alGenSources(1, &source);
+    alSourcei(source, AL_BUFFER, (ALint)tone.buffer);
+    alSourcei(source, AL_LOOPING, AL_TRUE);
+    alSourcePlay(source);
+
+    return true;
+}
+
+ALfloat* soundEngine::generateDataBuffer(ALuint sampleRate) {
     ALuint dataSize;
     ALfloat *data;
 
-    switch (tonetype) {
-        case TONETYPE::SQUARE:
-            generateSquareWave(data, frequency, nbHarmonics, gain);
-            break;
+    dataSize = (ALuint)(sampleRate * sizeof(ALfloat));
+    data = (ALfloat*) calloc(1, dataSize);
 
-        case TONETYPE::TRIANGLE:
-            break;
+    return data;
+}
 
-        case TONETYPE::NOISE:
-            break;
+ALuint soundEngine::generateBuffer(ALfloat *data, ALuint sampleRate) {
+    ALuint buffer, dataSize;
 
-        default:
-            throw std::runtime_error("Invalid tone type.");
-            return 0;
-    }
+    dataSize = (ALuint)(sampleRate * sizeof(ALfloat));
 
     buffer = 0;
     alGenBuffers(1, &buffer);
-    alBufferData(buffer, AL_FORMAT_MONO16, data, nbHarmonics * sizeof(ALfloat), nbHarmonics);
-
-    ALenum errors = alGetError();
-    if (errors != AL_NO_ERROR) {
-        printf("Error!!");
-        if (alIsBuffer(buffer)) {
-            alDeleteBuffers(1, &buffer);
-        }
-        return 0;
-    }
-
-    ALuint source = 0;
-    alGenSources(1, &source);
-    alSourcei(source, AL_BUFFER, buffer);
-    alSourcei(source, AL_LOOPING, AL_TRUE);
-    alSourcePlay(source);
+    alBufferData(buffer, AL_FORMAT_MONO_FLOAT32, data, (ALsizei)dataSize, (ALsizei)sampleRate);
 
     return buffer;
 }
 
+soundEngine::Tone::Tone(soundEngine::TONETYPE tonetype, ALuint buffer, ALuint sampleRate) {
+    this->tonetype = tonetype;
+    this->buffer = buffer;
+    this->sampleRate = sampleRate;
+}
