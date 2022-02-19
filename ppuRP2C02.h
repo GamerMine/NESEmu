@@ -47,7 +47,7 @@ public:
     // According to the nesdev wiki, it is called CIRAM.
     uint8_t ciram[2][1024];
 
-    uint8_t *oam = (uint8_t *)OAM;
+    uint8_t *oam = (uint8_t *)OAM; // Primary OAM
 
     bool nmi = false;
 
@@ -78,7 +78,7 @@ private:
             uint8_t vramAddrIncrement : 1;
             uint8_t spritePatternTableAddr : 1;
             uint8_t backgroundPatternTableAddr : 1;
-            uint8_t spriteSize : 1;
+            uint8_t spriteSize : 1; // 0: 8x8 pixels sprite   1: 8x16 pixels sprite
             uint8_t ppuSelect : 1;
             uint8_t generateNMI : 1;
         };
@@ -121,7 +121,7 @@ private:
         uint16_t rawData = 0x0000;
     };
 
-    struct objectAttributeMemory {
+    struct objectAttributeMemoryEntry {
         uint8_t posY;       // Y position of top of sprite
         uint8_t tileIndex;  // Tile index number;
         uint8_t attribute;  // Attributes
@@ -146,6 +146,15 @@ private:
     uint16_t bgShifterAttributeHI = 0x0000;
 
     uint8_t oamAddr = 0x00;
+    objectAttributeMemoryEntry spriteScanline[8] = {}; // Secondary OAM
+    uint8_t currentOAMEntry = 0x00; // Corresponding to n in the nesdev wiki
+    uint8_t spriteNb = 0x00;
+    uint8_t spritePatternShifterLo[8] = {};
+    uint8_t spritePatternShifterHi[8] = {};
+
+    bool spriteZeroPossible = false;
+    bool spriteZeroRendered = false;
+
 
 public:
     olc::Sprite& getScreen();

@@ -5,6 +5,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "cpuDebug.h"
+#include "../sound/soundEngine.h"
 
 cpuDebug::cpuDebug() {
     sAppName = "NES 6502 Debugger"; // The window name
@@ -109,7 +110,7 @@ void cpuDebug::drawOAM(int x, int y) {
 }
 
 bool cpuDebug::OnUserCreate() {
-    gamepak = std::make_shared<Gamepak>("mario.nes");
+    gamepak = std::make_shared<Gamepak>("mspacman.nes");
 
     nes.insertGamepak(gamepak);
 
@@ -122,7 +123,8 @@ bool cpuDebug::OnUserCreate() {
     }
     output.close();
 
-    //olc::SOUND::InitialiseAudio(44100, 1, 8, 512);
+    audioEngine.initializeEngine();
+    audioEngine.generateTone(soundEngine::SQUARE, 440, 0, 1);
 
     nes.reset();
 
@@ -134,7 +136,7 @@ bool cpuDebug::OnUserUpdate(float fElapsedTime) {
 
     nes.controllers[0] = 0x00;
     nes.controllers[0] |= GetKey(olc::Key::A).bHeld ? 0x80 : 0x00;      // A key
-    nes.controllers[0] |= GetKey(olc::Key::B).bHeld ? 0x40 : 0x00;      // B key
+    nes.controllers[0] |= GetKey(olc::Key::Z).bHeld ? 0x40 : 0x00;      // B key
     nes.controllers[0] |= GetKey(olc::Key::W).bHeld ? 0x20 : 0x00;      // Select key
     nes.controllers[0] |= GetKey(olc::Key::X).bHeld ? 0x10 : 0x00;      // Start key
     nes.controllers[0] |= GetKey(olc::Key::UP).bHeld ? 0x08 : 0x00;     // Up key
@@ -251,8 +253,7 @@ bool cpuDebug::OnUserUpdate(float fElapsedTime) {
 }
 
 bool cpuDebug::OnUserDestroy() {
-    olc::SOUND::DestroyAudio();
-
+    audioEngine.destroyEngine();
     return true;
 }
 
