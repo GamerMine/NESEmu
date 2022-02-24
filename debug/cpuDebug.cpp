@@ -110,7 +110,7 @@ void cpuDebug::drawOAM(int x, int y) {
 }
 
 bool cpuDebug::OnUserCreate() {
-    gamepak = std::make_shared<Gamepak>("mspacman.nes");
+    gamepak = std::make_shared<Gamepak>("smb.nes");
 
     nes.insertGamepak(gamepak);
 
@@ -124,8 +124,10 @@ bool cpuDebug::OnUserCreate() {
     output.close();
 
     audioEngine.initializeEngine();
-    soundEngine::Tone tone = soundEngine::generatePulseWave(265, 0.1, 0.5, 44100, 30);
-    soundEngine::playTone(tone);
+    // soundEngine::Tone tone = soundEngine::generatePulseWave(250, 0.1, 0.5, 44100, 30);
+    // soundEngine::Tone tone = soundEngine::generateTriangleWave(440, 0.5, 44100);
+    // soundEngine::Tone tone = soundEngine::generateNoise(0.5, 44100);
+    // soundEngine::playTone(tone, true);
 
     nes.reset();
 

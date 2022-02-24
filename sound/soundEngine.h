@@ -39,19 +39,24 @@ public:
         TONETYPE tonetype;
         ALuint buffer;
         ALuint sampleRate;
+        ALuint source;
 
     public:
-        Tone(TONETYPE tonetype, ALuint buffer, ALuint sampleRate);
+        Tone(TONETYPE tonetype, ALuint buffer, ALuint sampleRate, ALuint source);
     };
 
 public:
-    static Tone generatePulseWave(ALuint freq, ALfloat gain, ALfloat pulseWidth, ALuint sampleRate, ALfloat nbHarmonics);
+    static Tone generatePulseWave(ALuint freq, ALfloat gain, ALfloat dutyCycle, ALuint sampleRate, ALfloat nbHarmonics);
+    static Tone generateTriangleWave(ALuint freq, ALfloat gain, ALuint sampleRate);
+    static Tone generateNoise(ALfloat gain, ALuint sampleRate);
 
-    static bool playTone(Tone tone);
+    static bool playTone(Tone tone, bool loop);
+    void stopTone(Tone tone);
 
 private:
     static ALfloat* generateDataBuffer(ALuint sampleRate);
     static ALuint generateBuffer(ALfloat *data, ALuint sampleRate);
+    static ALuint generateSource(ALuint buffer);
 
 };
 

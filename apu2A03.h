@@ -1,0 +1,69 @@
+// Copyright (c) 2021-2022 Dwight Studio's Team <support@dwight-studio.fr>
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+//
+// Created by maxime on 19/02/2022.
+//
+
+#ifndef NES_EMU_APU2A03_H
+#define NES_EMU_APU2A03_H
+
+
+#include <cstdint>
+
+class apu2A03 {
+public:
+    apu2A03();
+    ~apu2A03();
+
+public:
+    void cpuWrite(uint16_t addr, uint8_t data);
+    uint8_t cpuRead(uint16_t addr);
+
+    void clock();
+    void reset();
+
+private:
+    union {
+        struct {
+            uint8_t channelPulse1 : 1;
+            uint8_t channelPulse2 : 1;
+            uint8_t channelTriangle : 1;
+            uint8_t channelNoise : 1;
+            uint8_t channelDMC : 1;
+            uint8_t unused : 3;
+        };
+        uint8_t rawData;
+    } apuStatus;
+
+    // Pulse 1 channel registers
+    uint8_t channelPulse1Status = 0x00;
+    uint8_t channelPulse1Sweep = 0x00;
+    uint8_t channelPulse1TimerLo = 0x00;
+    uint8_t channelPulse1TimerHi = 0x00; // It also contains the length counter load
+
+    // Pulse 2 channel registers
+    uint8_t channelPulse2Status = 0x00;
+    uint8_t channelPulse2Sweep = 0x00;
+    uint8_t channelPulse2TimerLo = 0x00;
+    uint8_t channelPulse2TimerHi = 0x00; // It also contains the length counter load
+
+    // Triangle channel registers
+    uint8_t channelTriangleLinearCounter = 0x00;
+    uint8_t channelTriangleTimerLo = 0x00;
+    uint8_t channelTriangleTimerHi = 0x00; // It also contains the length counter load
+
+    // Noise channel registers
+    uint8_t channelNoiseStatus = 0x00;
+    uint8_t channelNoiseModePeriod = 0x00;
+    uint8_t channelNoiseLengthCounterLoad = 0x00;
+
+    // Frame counter
+    uint8_t sequencer = 0x00;
+};
+
+
+#endif //NES_EMU_APU2A03_H

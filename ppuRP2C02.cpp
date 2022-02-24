@@ -605,12 +605,12 @@ void ppuRP2C02::clock() {
         uint8_t pixel0 = (bgShifterPatternLO & bit) > 0;
         uint8_t pixel1 = (bgShifterPatternHI & bit) > 0;
 
-        bgPixel = (pixel1 << 1) | pixel0;
+        bgPixel = (pixel1 << 3) | pixel0;
 
         uint8_t palette0 = (bgShifterAttributeLO & bit) > 0;
         uint8_t palette1 = (bgShifterAttributeHI & bit) > 0;
 
-        bgPalette = (palette1 << 1) | palette0;
+        bgPalette = (palette1 << 5) | palette0;
     }
 
     uint8_t spritePixel = 0x00;

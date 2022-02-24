@@ -37,6 +37,8 @@ void Bus::cpuWrite(uint16_t addr, uint8_t data) {
         dmaPage = data;
         dmaAddr = 0x00;
         isDMAActive = true;
+    } else if (addr >= 0x4000 && addr <= 0x4013 || addr == 0x4015 || addr == 0x4017) {
+        apu.cpuWrite(addr, data);
     } else if (addr >= 0x4016 && addr <= 0x4017) {
         controllers_status[addr & 0x0001] = controllers[addr & 0x0001];
     }
@@ -71,6 +73,7 @@ void Bus::reset() {
 void Bus::clock() {
     // The PPU is running 3 times faster than the cpu. It means that 3 ppu clocks = 1 cpu clock.
     ppu.clock();
+    apu.clock();
     if (clockCounter % 3 == 0) {
         if (isDMAActive) { // When a DMA transfer is active, the CPU is entirely paused.
 

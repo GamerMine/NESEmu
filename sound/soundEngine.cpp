@@ -42,8 +42,8 @@ void soundEngine::destroyEngine() const {
     alcCloseDevice(audioDevice);
 }
 
-soundEngine::Tone soundEngine::generatePulseWave(ALuint freq, ALfloat gain, ALfloat pulseWidth, ALuint sampleRate, ALfloat nbHarmonics) {
-    ALuint i, h, buffer;
+soundEngine::Tone soundEngine::generatePulseWave(ALuint freq, ALfloat gain, ALfloat dutyCycle, ALuint sampleRate, ALfloat nbHarmonics) {
+    ALuint i, h, buffer, source;
     ALfloat time, dTime;
     ALfloat *data;
 
@@ -54,28 +54,78 @@ soundEngine::Tone soundEngine::generatePulseWave(ALuint freq, ALfloat gain, ALfl
     for (i = 0; i < sampleRate; i++) {
         ALfloat value;
         for (h = 1; h < nbHarmonics; h++) {
-            value += (ALfloat)((1 / (ALfloat)h) * sin(M_PI * (ALfloat)h * pulseWidth) * cos(2 * M_PI * (ALfloat)h * (ALfloat)freq * time));
+            value += (ALfloat)((1 / (ALfloat)h) * sin(M_PI * (ALfloat)h * dutyCycle) * cos(2 * M_PI * (ALfloat)h * (ALfloat)freq * time));
         }
-        value *= (ALfloat)(gain * pulseWidth + ((2 * gain) / M_PI));
+        value *= (ALfloat)(gain * dutyCycle + ((2 * gain) / M_PI));
         data[i] = value;
         time += dTime;
     }
 
     buffer = generateBuffer(data, sampleRate);
+    source = generateSource(buffer);
 
-    return {soundEngine::PULSE_WAVE, buffer, sampleRate};
+    return {soundEngine::PULSE_WAVE, buffer, sampleRate, source};
 }
 
-bool soundEngine::playTone(soundEngine::Tone tone) {
-    ALuint source;
+soundEngine::Tone soundEngine::generateTriangleWave(ALuint freq, ALfloat gain, ALuint sampleRate) {
+    ALuint i, h, buffer, source;
+    ALfloat time, dTime;
+    ALfloat *data;
 
-    source = 0;
-    alGenSources(1, &source);
-    alSourcei(source, AL_BUFFER, (ALint)tone.buffer);
-    alSourcei(source, AL_LOOPING, AL_TRUE);
-    alSourcePlay(source);
+    dTime = 1 / (ALfloat)sampleRate;
+    time = 0;
+    data = generateDataBuffer(sampleRate);
+
+    for (i = 0; i < sampleRate; i++) {
+        ALfloat value;
+        for (h = 1; h < 16; h++) {
+            value += gain * (pow(-1, (ALfloat)h) / pow(2 * (ALfloat)h - 1, 2)) * sin(2 * M_PI * freq * (2 * (ALfloat)h - 1) * time);
+        }
+        value *= -(8 / (ALfloat)pow(M_PI, 2));
+        data[i] = value;
+        time += dTime;
+    }
+
+    buffer = generateBuffer(data, sampleRate);
+    source = generateSource(buffer);
+
+    return {soundEngine::TRIANGLE, buffer, sampleRate, source};
+}
+
+soundEngine::Tone soundEngine::generateNoise(ALfloat gain, ALuint sampleRate) {
+    ALuint i, h, buffer, source;
+    ALfloat time, dTime;
+    ALfloat *data;
+
+    time = 0;
+    dTime = 1 / (ALfloat)sampleRate;
+    data = generateDataBuffer(sampleRate);
+
+    for (i = 0; i < sampleRate; i++) {
+        ALfloat value;
+        for (h = 1; h < 30; h++) {
+            value += (ALfloat)((1 / (ALfloat)h) * sin(M_PI * (ALfloat)h * 0.5) * cos(2 * M_PI * (ALfloat)h * (ALfloat)(random() % (447000 - 29 + 1) + 29) * time));
+        }
+        value *= (ALfloat)(gain * 0.5 + ((2 * gain) / M_PI));
+        data[i] = value;
+        time += dTime;
+    }
+
+    buffer = generateBuffer(data, sampleRate);
+    source = generateSource(buffer);
+
+    return {soundEngine::NOISE, buffer, sampleRate, source};
+}
+
+bool soundEngine::playTone(soundEngine::Tone tone, bool loop) {
+    alSourcei(tone.source, AL_LOOPING, loop ? AL_TRUE : AL_FALSE);
+    alSourcePlay(tone.source);
 
     return true;
+}
+
+void soundEngine::stopTone(Tone tone) {
+    alSourceStop(tone.source);
 }
 
 ALfloat* soundEngine::generateDataBuffer(ALuint sampleRate) {
@@ -100,8 +150,19 @@ ALuint soundEngine::generateBuffer(ALfloat *data, ALuint sampleRate) {
     return buffer;
 }
 
-soundEngine::Tone::Tone(soundEngine::TONETYPE tonetype, ALuint buffer, ALuint sampleRate) {
+ALuint soundEngine::generateSource(ALuint buffer) {
+    ALuint source;
+
+    source = 0;
+    alGenSources(1, &source);
+    alSourcei(source, AL_BUFFER, (ALint)buffer);
+
+    return source;
+}
+
+soundEngine::Tone::Tone(soundEngine::TONETYPE tonetype, ALuint buffer, ALuint sampleRate, ALuint source) {
     this->tonetype = tonetype;
     this->buffer = buffer;
     this->sampleRate = sampleRate;
+    this->source = source;
 }

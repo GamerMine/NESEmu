@@ -18,6 +18,7 @@
 #include "cpu6502.h"
 #include "ppuRP2C02.h"
 #include "Gamepak.h"
+#include "apu2A03.h"
 
 // The Bus is part of the NES, it is here where every device communicate to each other.
 // This is not mandatory to make this object but ut make the code more readable and understandable.
@@ -30,6 +31,7 @@ public:
 public: // Devices connected to the bus
     cpu6502 cpu;
     ppuRP2C02 ppu;
+    apu2A03 apu;
 
     std::array<uint8_t, 2 * 1024> cpuRAM{}; // 1 byte = 1024 bits and the NES is equipped with 2KB of CPU RAM
 
