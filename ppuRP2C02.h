@@ -41,6 +41,8 @@ public:
     uint8_t ppuRead(uint16_t addr);
 
     void clock(); // Like the CPU, the PPU has his clock function
+    void reset();
+
     // The PPU has 4 nametables and 1 nametable is 1KB long. The PPU have only 2KB of VRAM, not enough for 4 nametables.
     // 2 of 4 nametables are mirrored which means they contain the same data as the 2 others.
     // So, we are creating an array of 2 * 1024 bits to store 2 nametables of 1KB each.

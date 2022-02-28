@@ -308,6 +308,16 @@ olc::Pixel& ppuRP2C02::getColor(uint8_t palette, uint8_t pixel) {
     return colors[ppuRead(0x3F00 + (palette << 2) + pixel) & 0x3F];
 }
 
+void ppuRP2C02::reset() {
+    screenOut = olc::Sprite(256, 240);
+    scanline = -1;
+    cycle = 0;
+    addressLatch = 0x00;
+    spriteZeroPossible = false;
+    spriteZeroRendered = false;
+    spriteNb = 0x00;
+}
+
 void ppuRP2C02::clock() {
 
     // ####################################################################################################################
@@ -605,12 +615,12 @@ void ppuRP2C02::clock() {
         uint8_t pixel0 = (bgShifterPatternLO & bit) > 0;
         uint8_t pixel1 = (bgShifterPatternHI & bit) > 0;
 
-        bgPixel = (pixel1 << 3) | pixel0;
+        bgPixel = (pixel1 << 1) | pixel0;
 
         uint8_t palette0 = (bgShifterAttributeLO & bit) > 0;
         uint8_t palette1 = (bgShifterAttributeHI & bit) > 0;
 
-        bgPalette = (palette1 << 5) | palette0;
+        bgPalette = (palette1 << 1) | palette0;
     }
 
     uint8_t spritePixel = 0x00;

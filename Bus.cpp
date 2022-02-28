@@ -67,6 +67,8 @@ void Bus::insertGamepak(const std::shared_ptr<Gamepak>& gpk) {
 
 void Bus::reset() {
     cpu.reset();
+    ppu.reset();
+    apu.reset();
     clockCounter = 0;
 }
 

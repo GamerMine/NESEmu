@@ -13,6 +13,7 @@
 
 
 #include <cstdint>
+#include "sound/soundEngine.h"
 
 class apu2A03 {
 public:
@@ -27,6 +28,12 @@ public:
     void reset();
 
 private:
+
+    void play();
+
+    uint8_t counter = 0x00;
+
+private:
     union {
         struct {
             uint8_t channelPulse1 : 1;
@@ -37,14 +44,43 @@ private:
             uint8_t unused : 3;
         };
         uint8_t rawData;
-    } apuStatus;
+    } apuStatus{};
 
-    // Pulse 1 channel registers
-    uint8_t channelPulse1Status = 0x00;
-    uint8_t channelPulse1Sweep = 0x00;
-    uint8_t channelPulse1TimerLo = 0x00;
-    uint8_t channelPulse1TimerHi = 0x00; // It also contains the length counter load
+    // Pulse 1 channel register
+    union {
+        union {
+            struct {
+                uint8_t envelopeDivider : 4;
+                uint8_t envelopeFlag : 1;
+                uint8_t lengthCounterHalt : 1;
+                uint8_t dutyCycle : 2;
+            };
+            uint8_t rawData;
+        } status;
 
+        union {
+            struct {
+                uint8_t shiftCount : 3;
+                uint8_t negateFlag : 1;
+                uint8_t deviderPeriod : 3;
+                uint8_t enabledFlag : 1;
+            };
+            uint8_t rawData;
+        } sweep;
+
+        uint8_t timerLo;
+
+        union {
+            struct {
+                uint8_t timerHi : 3;
+                uint8_t lenghtCounterLoad : 5;
+            };
+            uint8_t rawData;
+        } timerHi;
+
+    } channelPulse1;
+
+    soundEngine::Tone tone{44100};
     // Pulse 2 channel registers
     uint8_t channelPulse2Status = 0x00;
     uint8_t channelPulse2Sweep = 0x00;
@@ -62,7 +98,8 @@ private:
     uint8_t channelNoiseLengthCounterLoad = 0x00;
 
     // Frame counter
-    uint8_t sequencer = 0x00;
+    uint8_t frameCounterData = 0x00;
+    uint8_t sequencer = 0x01;
 };
 
 

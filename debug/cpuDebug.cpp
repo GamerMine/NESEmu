@@ -5,7 +5,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "cpuDebug.h"
-#include "../sound/soundEngine.h"
 
 cpuDebug::cpuDebug() {
     sAppName = "NES 6502 Debugger"; // The window name
@@ -110,7 +109,7 @@ void cpuDebug::drawOAM(int x, int y) {
 }
 
 bool cpuDebug::OnUserCreate() {
-    gamepak = std::make_shared<Gamepak>("smb.nes");
+    gamepak = std::make_shared<Gamepak>("mario.nes");
 
     nes.insertGamepak(gamepak);
 
@@ -124,10 +123,11 @@ bool cpuDebug::OnUserCreate() {
     output.close();
 
     audioEngine.initializeEngine();
-    // soundEngine::Tone tone = soundEngine::generatePulseWave(250, 0.1, 0.5, 44100, 30);
+    // soundEngine::Tone tone(44100);
+    //soundEngine::generatePulseWave(tone,440, 0.1, 0.5, 30);
     // soundEngine::Tone tone = soundEngine::generateTriangleWave(440, 0.5, 44100);
-    // soundEngine::Tone tone = soundEngine::generateNoise(0.5, 44100);
-    // soundEngine::playTone(tone, true);
+    // soundEngine::Tone tone = soundEngine::generateNoise(0.5, 440.0);
+    //soundEngine::playTone(tone, true);
 
     nes.reset();
 

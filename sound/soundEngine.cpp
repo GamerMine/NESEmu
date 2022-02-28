@@ -13,7 +13,6 @@
 #include <cmath>
 #include "AL/alext.h"
 
-
 soundEngine::soundEngine() = default;
 
 soundEngine::~soundEngine() = default;
@@ -42,83 +41,72 @@ void soundEngine::destroyEngine() const {
     alcCloseDevice(audioDevice);
 }
 
-soundEngine::Tone soundEngine::generatePulseWave(ALuint freq, ALfloat gain, ALfloat dutyCycle, ALuint sampleRate, ALfloat nbHarmonics) {
-    ALuint i, h, buffer, source;
+void soundEngine::generatePulseWave(soundEngine::Tone tone, ALuint freq, ALfloat gain, ALfloat dutyCycle, ALfloat nbHarmonics) {
+    ALuint i, h;
     ALfloat time, dTime;
-    ALfloat *data;
 
     time = 0;
-    dTime = 1 / (ALfloat)sampleRate;
-    data = generateDataBuffer(sampleRate);
+    dTime = 1 / (ALfloat)tone.sampleRate;
 
-    for (i = 0; i < sampleRate; i++) {
+    for (i = 0; i < tone.sampleRate; i++) {
         ALfloat value;
         for (h = 1; h < nbHarmonics; h++) {
-            value += (ALfloat)((1 / (ALfloat)h) * sin(M_PI * (ALfloat)h * dutyCycle) * cos(2 * M_PI * (ALfloat)h * (ALfloat)freq * time));
+            value += (ALfloat)((1 / (ALfloat)h) * sin(M_PI * (ALfloat)h * dutyCycle) * sin(2 * M_PI * (ALfloat)h * (ALfloat)freq * time));
         }
         value *= (ALfloat)(gain * dutyCycle + ((2 * gain) / M_PI));
-        data[i] = value;
+        tone.data[i] = value;
         time += dTime;
     }
 
-    buffer = generateBuffer(data, sampleRate);
-    source = generateSource(buffer);
-
-    return {soundEngine::PULSE_WAVE, buffer, sampleRate, source};
+    alBufferData(tone.buffer, AL_FORMAT_MONO_FLOAT32, tone.data, (ALsizei)tone.dataSize, (ALsizei)tone.sampleRate);
+    alSourcei(tone.source, AL_BUFFER, (ALint)tone.buffer);
 }
 
-soundEngine::Tone soundEngine::generateTriangleWave(ALuint freq, ALfloat gain, ALuint sampleRate) {
-    ALuint i, h, buffer, source;
+void soundEngine::generateTriangleWave(soundEngine::Tone tone, ALuint freq, ALfloat gain) {
+    ALuint i, h;
     ALfloat time, dTime;
-    ALfloat *data;
 
-    dTime = 1 / (ALfloat)sampleRate;
+    dTime = 1 / (ALfloat)tone.sampleRate;
     time = 0;
-    data = generateDataBuffer(sampleRate);
 
-    for (i = 0; i < sampleRate; i++) {
+    for (i = 0; i < tone.sampleRate; i++) {
         ALfloat value;
         for (h = 1; h < 16; h++) {
             value += gain * (pow(-1, (ALfloat)h) / pow(2 * (ALfloat)h - 1, 2)) * sin(2 * M_PI * freq * (2 * (ALfloat)h - 1) * time);
         }
         value *= -(8 / (ALfloat)pow(M_PI, 2));
-        data[i] = value;
+        tone.data[i] = value;
         time += dTime;
     }
 
-    buffer = generateBuffer(data, sampleRate);
-    source = generateSource(buffer);
-
-    return {soundEngine::TRIANGLE, buffer, sampleRate, source};
+    alBufferData(tone.buffer, AL_FORMAT_MONO_FLOAT32, tone.data, (ALsizei)tone.dataSize, (ALsizei)tone.sampleRate);
+    alSourcei(tone.source, AL_BUFFER, (ALint)tone.buffer);
 }
 
-soundEngine::Tone soundEngine::generateNoise(ALfloat gain, ALuint sampleRate) {
-    ALuint i, h, buffer, source;
+void soundEngine::generateNoise(soundEngine::Tone tone, ALfloat gain) {
+    ALuint i, h;
     ALfloat time, dTime;
-    ALfloat *data;
 
     time = 0;
-    dTime = 1 / (ALfloat)sampleRate;
-    data = generateDataBuffer(sampleRate);
+    dTime = 1 / (ALfloat)tone.sampleRate;
 
-    for (i = 0; i < sampleRate; i++) {
+    for (i = 0; i < tone.sampleRate; i++) {
         ALfloat value;
         for (h = 1; h < 30; h++) {
             value += (ALfloat)((1 / (ALfloat)h) * sin(M_PI * (ALfloat)h * 0.5) * cos(2 * M_PI * (ALfloat)h * (ALfloat)(random() % (447000 - 29 + 1) + 29) * time));
         }
         value *= (ALfloat)(gain * 0.5 + ((2 * gain) / M_PI));
-        data[i] = value;
+        tone.data[i] = value;
         time += dTime;
     }
 
-    buffer = generateBuffer(data, sampleRate);
-    source = generateSource(buffer);
-
-    return {soundEngine::NOISE, buffer, sampleRate, source};
+    alBufferData(tone.buffer, AL_FORMAT_MONO_FLOAT32, tone.data, (ALsizei)tone.dataSize, (ALsizei)tone.sampleRate);
+    alSourcei(tone.source, AL_BUFFER, (ALint)tone.buffer);
 }
 
 bool soundEngine::playTone(soundEngine::Tone tone, bool loop) {
     alSourcei(tone.source, AL_LOOPING, loop ? AL_TRUE : AL_FALSE);
+    alSourceStop(tone.source);
     alSourcePlay(tone.source);
 
     return true;
@@ -128,41 +116,25 @@ void soundEngine::stopTone(Tone tone) {
     alSourceStop(tone.source);
 }
 
-ALfloat* soundEngine::generateDataBuffer(ALuint sampleRate) {
-    ALuint dataSize;
-    ALfloat *data;
+soundEngine::Tone::Tone() {
+    this->buffer = 0;
+    this->source = 0;
+    this->sampleRate = 44100;
+    this->dataSize = (ALuint)(this->sampleRate * sizeof(ALfloat));
+    this->data = (ALfloat*) calloc(1, this->dataSize);
 
-    dataSize = (ALuint)(sampleRate * sizeof(ALfloat));
-    data = (ALfloat*) calloc(1, dataSize);
+    alGenBuffers(1, &this->buffer);
+    alGenSources(1, &this->source);
 
-    return data;
 }
 
-ALuint soundEngine::generateBuffer(ALfloat *data, ALuint sampleRate) {
-    ALuint buffer, dataSize;
-
-    dataSize = (ALuint)(sampleRate * sizeof(ALfloat));
-
-    buffer = 0;
-    alGenBuffers(1, &buffer);
-    alBufferData(buffer, AL_FORMAT_MONO_FLOAT32, data, (ALsizei)dataSize, (ALsizei)sampleRate);
-
-    return buffer;
-}
-
-ALuint soundEngine::generateSource(ALuint buffer) {
-    ALuint source;
-
-    source = 0;
-    alGenSources(1, &source);
-    alSourcei(source, AL_BUFFER, (ALint)buffer);
-
-    return source;
-}
-
-soundEngine::Tone::Tone(soundEngine::TONETYPE tonetype, ALuint buffer, ALuint sampleRate, ALuint source) {
-    this->tonetype = tonetype;
-    this->buffer = buffer;
+soundEngine::Tone::Tone(ALuint sampleRate) {
+    this->buffer = 0;
+    this->source = 0;
     this->sampleRate = sampleRate;
-    this->source = source;
+    this->dataSize = (ALuint)(this->sampleRate * sizeof(ALfloat));
+    this->data = (ALfloat*) calloc(1, this->dataSize);
+
+    alGenBuffers(1, &this->buffer);
+    alGenSources(1, &this->source);
 }

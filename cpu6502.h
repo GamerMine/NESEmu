@@ -24,6 +24,8 @@ class Bus;
 class cpu6502 {
 
 public:
+    static const uint32_t cpuSpeed = 1789773;
+
     cpu6502();
     ~cpu6502();
 

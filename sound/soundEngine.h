@@ -28,35 +28,26 @@ public:
     ALCdevice* audioDevice{};
     ALCcontext* audioContext{};
 
-    enum TONETYPE {
-        PULSE_WAVE,
-        TRIANGLE,
-        NOISE,
-    };
-
     class Tone {
     public:
-        TONETYPE tonetype;
         ALuint buffer;
         ALuint sampleRate;
         ALuint source;
+        ALfloat *data;
+        ALuint dataSize;
 
     public:
-        Tone(TONETYPE tonetype, ALuint buffer, ALuint sampleRate, ALuint source);
+        Tone();
+        Tone(ALuint sampleRate);
     };
 
 public:
-    static Tone generatePulseWave(ALuint freq, ALfloat gain, ALfloat dutyCycle, ALuint sampleRate, ALfloat nbHarmonics);
-    static Tone generateTriangleWave(ALuint freq, ALfloat gain, ALuint sampleRate);
-    static Tone generateNoise(ALfloat gain, ALuint sampleRate);
+    static void generatePulseWave(Tone tone, ALuint freq, ALfloat gain, ALfloat dutyCycle, ALfloat nbHarmonics);
+    static void generateTriangleWave(Tone tone, ALuint freq, ALfloat gain);
+    static void generateNoise(Tone tone, ALfloat gain);
 
     static bool playTone(Tone tone, bool loop);
-    void stopTone(Tone tone);
-
-private:
-    static ALfloat* generateDataBuffer(ALuint sampleRate);
-    static ALuint generateBuffer(ALfloat *data, ALuint sampleRate);
-    static ALuint generateSource(ALuint buffer);
+    static void stopTone(Tone tone);
 
 };
 
