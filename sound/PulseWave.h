@@ -29,10 +29,15 @@ public:
     void setGain(float newGain);
     void setDutyCycle(float newDutyCycle);
 
+    void mute();
+    void unmute();
+
     uint16_t getFrequency() const;
     float getNbHarmonics() const;
     float getGain() const;
     float getDutyCycle() const;
+
+    bool isPlaying() const;
 
 public:
     typedef struct settings {
@@ -40,15 +45,16 @@ public:
         float nbHarmonics;
         float gain;
         float dutyCycle;
+        uint8_t mute;
     } settings;
-    bool isPlaying = false;
 
 private:
     RtAudio audio;
     RtAudio::StreamParameters parameters;
     uint16_t sampleRate;
     unsigned int bufferFrames = 2;
-    settings data = {0, 0, 0, 0};
+    settings data = {0, 0, 0, 0, 0};
+    bool playing = false;
 };
 
 

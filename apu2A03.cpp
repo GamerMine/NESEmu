@@ -94,9 +94,11 @@ void apu2A03::cpuWrite(uint16_t addr, uint8_t data) {
             if (!apuStatus.channelPulse1) {
                 printf("%i", apuStatus.channelPulse1);
                 channelPulse1.timerHi.lenghtCounterLoad = 0x00;
-                if (pulseWave.isPlaying) {
-                    pulseWave.setGain(0);
+                if (pulseWave.isPlaying()) {
+                    pulseWave.mute();
                 }
+            } else {
+                pulseWave.unmute();
             }
 
             /*if (!apuStatus.channelPulse2) {
@@ -147,9 +149,10 @@ void apu2A03::clock() {
         if (!channelPulse1.status.lengthCounterHalt) {
             if (channelPulse1.timerHi.lenghtCounterLoad > 0) {
                 channelPulse1.timerHi.lenghtCounterLoad--;
+                pulseWave.unmute();
             } else {
-                if (pulseWave.isPlaying) {
-                    pulseWave.setGain(0);
+                if (pulseWave.isPlaying()) {
+                    pulseWave.mute();
                 }
             }
         }
@@ -170,6 +173,7 @@ void apu2A03::reset() {
     apuStatus.rawData = 0x00;
     frameCounterData = 0x00;
     sequencer = 0x00;
+    pulseWave.play();
     cpuWrite(0x4015, 0x00);
 }
 

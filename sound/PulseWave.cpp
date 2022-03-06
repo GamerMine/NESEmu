@@ -24,7 +24,7 @@ int generatePulseWave(void *outputBuffer, void *inputBuffer, unsigned int nBuffe
         for (int h = 1; h < pSettings->nbHarmonics; h++) {
             *buffer += (float)((1 / (float)h) * sin(M_PI * (float)h * pSettings->dutyCycle) * sin(2 * M_PI * (float)h * pSettings->frequency * streamTime));
         }
-        *buffer++ *= (float)(pSettings->gain * pSettings->dutyCycle + ((2 * pSettings->gain) / M_PI));
+        *buffer++ *= (float)((pSettings->gain * (float)pSettings->mute) * pSettings->dutyCycle + ((2 * (pSettings->gain * (float)pSettings->mute)) / M_PI));
     }
 
     return 0;
@@ -66,12 +66,12 @@ PulseWave::~PulseWave() {
 
 void PulseWave::play() {
     this->audio.startStream();
-    isPlaying = true;
+    playing = true;
 }
 
 void PulseWave::stop() {
     this->audio.stopStream();
-    isPlaying = false;
+    playing = false;
 }
 
 void PulseWave::setFrequency(uint16_t newFrequency) {
@@ -104,4 +104,16 @@ float PulseWave::getGain() const {
 
 float PulseWave::getDutyCycle() const {
     return this->data.dutyCycle;
+}
+
+bool PulseWave::isPlaying() const {
+    return this->playing;
+}
+
+void PulseWave::mute() {
+    this->data.mute = 0;
+}
+
+void PulseWave::unmute() {
+    this->data.mute = 1;
 }
