@@ -122,13 +122,6 @@ bool cpuDebug::OnUserCreate() {
     }
     output.close();
 
-    audioEngine.initializeEngine();
-    // soundEngine::Tone tone(44100);
-    //soundEngine::generatePulseWave(tone,440, 0.1, 0.5, 30);
-    // soundEngine::Tone tone = soundEngine::generateTriangleWave(440, 0.5, 44100);
-    // soundEngine::Tone tone = soundEngine::generateNoise(0.5, 440.0);
-    //soundEngine::playTone(tone, true);
-
     nes.reset();
 
     return true;
@@ -256,7 +249,6 @@ bool cpuDebug::OnUserUpdate(float fElapsedTime) {
 }
 
 bool cpuDebug::OnUserDestroy() {
-    audioEngine.destroyEngine();
     return true;
 }
 

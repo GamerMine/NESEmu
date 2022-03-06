@@ -66,17 +66,19 @@ PulseWave::~PulseWave() {
 
 void PulseWave::play() {
     this->audio.startStream();
+    isPlaying = true;
 }
 
 void PulseWave::stop() {
     this->audio.stopStream();
+    isPlaying = false;
 }
 
 void PulseWave::setFrequency(uint16_t newFrequency) {
     this->data.frequency = newFrequency;
 }
 
-void PulseWave::setNbHarmonics(uint16_t newNbHarmonics) {
+void PulseWave::setNbHarmonics(float newNbHarmonics) {
     this->data.nbHarmonics = newNbHarmonics;
 }
 
@@ -92,7 +94,7 @@ uint16_t PulseWave::getFrequency() const {
     return this->data.frequency;
 }
 
-uint16_t PulseWave::getNbHarmonics() const {
+float PulseWave::getNbHarmonics() const {
     return this->data.nbHarmonics;
 }
 

@@ -9,7 +9,6 @@
 //
 
 #include "apu2A03.h"
-#include "sound/soundEngine.h"
 #include "cpu6502.h"
 
 apu2A03::apu2A03() = default;
@@ -20,6 +19,7 @@ void apu2A03::cpuWrite(uint16_t addr, uint8_t data) {
     switch (addr) {
         case 0x4000:
             channelPulse1.status.rawData = data;
+
             play();
             break;
 
@@ -92,7 +92,11 @@ void apu2A03::cpuWrite(uint16_t addr, uint8_t data) {
             apuStatus.rawData = data;
 
             if (!apuStatus.channelPulse1) {
+                printf("%i", apuStatus.channelPulse1);
                 channelPulse1.timerHi.lenghtCounterLoad = 0x00;
+                if (pulseWave.isPlaying) {
+                    pulseWave.setGain(0);
+                }
             }
 
             /*if (!apuStatus.channelPulse2) {
@@ -143,6 +147,10 @@ void apu2A03::clock() {
         if (!channelPulse1.status.lengthCounterHalt) {
             if (channelPulse1.timerHi.lenghtCounterLoad > 0) {
                 channelPulse1.timerHi.lenghtCounterLoad--;
+            } else {
+                if (pulseWave.isPlaying) {
+                    pulseWave.setGain(0);
+                }
             }
         }
 /*
@@ -162,7 +170,7 @@ void apu2A03::reset() {
     apuStatus.rawData = 0x00;
     frameCounterData = 0x00;
     sequencer = 0x00;
-    tone = soundEngine::Tone(44100);
+    cpuWrite(0x4015, 0x00);
 }
 
 void apu2A03::play() {
@@ -192,8 +200,9 @@ void apu2A03::play() {
                 dutyCycle = 0.75;
                 break;
         }
-
-        soundEngine::generatePulseWave(tone, frequency, 0.1, 0.5, 30);
-        soundEngine::playTone(tone, false);
+        pulseWave.setGain(0.01f);
+        pulseWave.setFrequency(frequency);
+        pulseWave.setNbHarmonics(30);
+        pulseWave.setDutyCycle(dutyCycle);
     }
 }

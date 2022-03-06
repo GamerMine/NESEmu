@@ -11,9 +11,8 @@
 #ifndef NES_EMU_APU2A03_H
 #define NES_EMU_APU2A03_H
 
-
 #include <cstdint>
-#include "sound/soundEngine.h"
+#include "sound//PulseWave.h"
 
 class apu2A03 {
 public:
@@ -77,10 +76,9 @@ private:
             };
             uint8_t rawData;
         } timerHi;
-
     } channelPulse1;
 
-    soundEngine::Tone tone{44100};
+    PulseWave pulseWave{44100};
     // Pulse 2 channel registers
     uint8_t channelPulse2Status = 0x00;
     uint8_t channelPulse2Sweep = 0x00;

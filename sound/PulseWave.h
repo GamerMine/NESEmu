@@ -25,22 +25,23 @@ public:
     void stop();
 
     void setFrequency(uint16_t newFrequency);
-    void setNbHarmonics(uint16_t newNbHarmonics);
+    void setNbHarmonics(float newNbHarmonics);
     void setGain(float newGain);
     void setDutyCycle(float newDutyCycle);
 
     uint16_t getFrequency() const;
-    uint16_t getNbHarmonics() const;
+    float getNbHarmonics() const;
     float getGain() const;
     float getDutyCycle() const;
 
 public:
     typedef struct settings {
         uint16_t frequency;
-        uint16_t nbHarmonics;
+        float nbHarmonics;
         float gain;
         float dutyCycle;
     } settings;
+    bool isPlaying = false;
 
 private:
     RtAudio audio;

@@ -15,7 +15,6 @@
 #include "olcPixelGameEngine.h"
 
 #include "../Bus.h"
-#include "../sound/soundEngine.h"
 
 class cpuDebug : public olc::PixelGameEngine{
 public:
@@ -32,8 +31,6 @@ public:
     const int swatchSize = 6;
     bool showOAM = false;
     bool hideDebug = false;
-
-    soundEngine audioEngine;
 
     static std::string toHex(uint32_t number, uint8_t numDigits);
 
