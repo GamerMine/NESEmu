@@ -11,6 +11,7 @@
 #include <fstream>
 #include <filesystem>
 #include "Gamepak.h"
+#include "mappers/Mapper_002.h"
 
 Gamepak::Gamepak(const char *filename) {
     struct Header { // This is what is contained into a .nes file header
@@ -42,6 +43,7 @@ Gamepak::Gamepak(const char *filename) {
 
         } else if (inesFormat == 1) { // Corresponding to iNES format
             prgROMbanks = header.prgRomSize;
+            printf("%hu", prgROMbanks);
             prgROM.resize(prgROMbanks * 16 * 1024); // The PRG ROMs are 16KB memories, so we multiply that by the number of units
             ifstream.read((char*)prgROM.data(), prgROM.size()); // We can read the next x bytes of data corresponding to the size of the vector
 
@@ -68,6 +70,7 @@ Gamepak::Gamepak(const char *filename) {
         // Here we are selecting the correct Mapper (WIP)
         switch (mapperID) {
             case 0: mapper = std::make_shared<Mapper_000>(prgROMbanks, chrROMbanks); break;
+            case 2: mapper = std::make_shared<Mapper_002>(prgROMbanks, chrROMbanks); break;
         }
 
         ifstream.close();
