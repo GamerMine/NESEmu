@@ -109,7 +109,7 @@ void cpuDebug::drawOAM(int x, int y) {
 }
 
 bool cpuDebug::OnUserCreate() {
-    gamepak = std::make_shared<Gamepak>("megaman.nes");
+    gamepak = std::make_shared<Gamepak>("ghost.nes");
 
     nes.insertGamepak(gamepak);
 

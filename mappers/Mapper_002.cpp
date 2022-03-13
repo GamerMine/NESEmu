@@ -20,7 +20,6 @@ Mapper_002::~Mapper_002() = default;
 bool Mapper_002::cpuMapRead(uint16_t addr, uint32_t &mapped_addr) {
     if (addr >= 0x8000 && addr <= 0xBFFF) {
         mapped_addr = (addr & 0x3FFF) + (bankSelect * 16 * 1024);
-        bankSelect = addr & 0x00FF;
         return true;
     } else if (addr >= 0xC000 && addr <= 0xFFFF) {
         mapped_addr = (addr & 0x3FFF) + ((numPRGUnits - 1) * 16 * 1024);
@@ -30,16 +29,24 @@ bool Mapper_002::cpuMapRead(uint16_t addr, uint32_t &mapped_addr) {
 }
 
 bool Mapper_002::cpuMapWrite(uint16_t addr, uint32_t &mapped_addr) {
-    // Read only !!
+    if (addr >= 0x8000 && addr <= 0xFFFF) {
+        bankSelect = addr & 0x000F;
+    }
     return false;
 }
 
 bool Mapper_002::ppuMapRead(uint16_t addr, uint32_t &mapped_addr) {
-    // Do nothing
+    if (addr >= 0x0000 && addr <= 0x1FFF) {
+        mapped_addr = addr;
+        return true;
+    }
     return false;
 }
 
 bool Mapper_002::ppuMapWrite(uint16_t addr, uint32_t &mapped_addr) {
-    // Do nothing
+    if (addr >= 0x0000 && addr <= 0x1FFF) {
+        mapped_addr = addr;
+        return true;
+    }
     return false;
 }

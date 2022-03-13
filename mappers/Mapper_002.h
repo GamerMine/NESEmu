@@ -26,7 +26,7 @@ public:
     bool ppuMapWrite(uint16_t addr, uint32_t &mapped_addr) override;
 
 private:
-    uint8_t bankSelect = numPRGUnits;
+    uint8_t bankSelect = 0;
 };
 
 

@@ -92,7 +92,6 @@ void apu2A03::cpuWrite(uint16_t addr, uint8_t data) {
             apuStatus.rawData = data;
 
             if (!apuStatus.channelPulse1) {
-                printf("%i", apuStatus.channelPulse1);
                 channelPulse1.timerHi.lenghtCounterLoad = 0x00;
                 if (pulseWave.isPlaying()) {
                     pulseWave.mute();

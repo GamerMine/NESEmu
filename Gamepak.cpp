@@ -43,7 +43,7 @@ Gamepak::Gamepak(const char *filename) {
 
         } else if (inesFormat == 1) { // Corresponding to iNES format
             prgROMbanks = header.prgRomSize;
-            printf("%hu", prgROMbanks);
+            printf("%i\n", mapperID);
             prgROM.resize(prgROMbanks * 16 * 1024); // The PRG ROMs are 16KB memories, so we multiply that by the number of units
             ifstream.read((char*)prgROM.data(), prgROM.size()); // We can read the next x bytes of data corresponding to the size of the vector
 
@@ -51,7 +51,12 @@ Gamepak::Gamepak(const char *filename) {
             prgRAM.resize(prgRAMbanks * 8 * 1024);
 
             chrROMbanks = header.chrRomSize;
-            chrROM.resize(chrROMbanks * 8 * 1024); // The CHR ROMs are 8KB memories, so we multiply that by the number of units
+            if (chrROMbanks > 0) {
+                chrROM.resize(chrROMbanks * 8 *
+                              1024); // The CHR ROMs are 8KB memories, so we multiply that by the number of units
+            } else {
+                chrROM.resize(8192);
+            }
             ifstream.read((char*)chrROM.data(), chrROM.size()); // We can read the next x bytes of data corresponding to the size of the vector
 
             if ((header.mapper1 & 0x08) == 0x00) {
@@ -111,7 +116,10 @@ bool Gamepak::ppuRead(uint16_t addr, uint8_t &data) {
 bool Gamepak::ppuWrite(uint16_t addr, uint8_t data) {
     uint32_t mapped_addr = 0;
     if (mapper->ppuMapWrite(addr, mapped_addr)) {
-        // TODO: CHR RAM writes if exists
+        if (chrROMbanks == 0) {
+            chrROM[mapped_addr] = data;
+            return true;
+        }
         return true;
     }
     return false;
