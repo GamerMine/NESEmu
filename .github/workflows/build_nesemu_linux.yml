@@ -23,8 +23,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Build
+    - name: Configure
       run: |
         mkdir build
         cd build
         cmake ..
+
+    - name: Build
+      run: cmake --build .
